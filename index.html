@@ -100,23 +100,23 @@
     }
     
     .image-gallery { 
-      display: flex; 
-      flex-wrap: wrap; 
-      gap: 10px; 
-      margin-top: 60px; 
+      display: block;
+      margin-top: 60px;
+      padding: 20px;
     }
     
     .thumbnail-container { 
-      width: 400px;
-      height: 400px;
-      position: relative; 
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto 40px;
+      position: relative;
     }
     
     .thumbnail { 
-      width: 100%; 
-      height: 100%; 
-      object-fit: contain; 
-      cursor: pointer; 
+      width: 100%;
+      height: auto;
+      max-height: 80vh;
+      object-fit: contain;
     }
     
     .delete-image { 
@@ -130,106 +130,25 @@
       z-index: 100;
     }
     
-    /* Favoriten-Button im Grid */
     .favorite-btn { 
       position: absolute;
-      bottom: 10px;
+      bottom: -25px;
       left: 10px;
-      width: 24px;
-      height: 24px;
-      display: block;
-      cursor: pointer;
+      color: black;
+      font-weight: bold;
       background: none;
       border: none;
+      cursor: pointer;
+      padding: 2px 5px;
+      font-size: 14px;
     }
     
-    .favorite-btn:before { 
-      content: "";
-      display: block;
-      width: 20px;
-      height: 20px;
-      border: 2px solid #ff69b4;
-      border-radius: 50%;
-      background: transparent;
-    }
-    
-    .favorite-btn.active:before { 
-      background: #ff69b4;
-      border-color: #ff69b4;
+    .favorite-btn.active { 
+      color: #ff69b4;
     }
     
     .edit-mode .delete-image { 
       display: block; 
-    }
-    
-    #overlay { 
-      position: fixed; 
-      top: 0; 
-      left: 0; 
-      width: 100%; 
-      height: 100%; 
-      background: #b0b0b0; 
-      display: none; 
-      flex-direction: column;
-      justify-content: center; 
-      align-items: center; 
-      z-index: 1000; 
-    }
-    
-    .image-container {
-      position: relative;
-      max-width: 90%;
-      max-height: 70vh;
-      text-align: center;
-    }
-    
-    #fullImage { 
-      max-width: 100%; 
-      max-height: 65vh;
-      object-fit: contain; 
-    }
-
-    .nav-buttons {
-      display: flex;
-      gap: 15px;
-      margin-top: 20px;
-      align-items: center;
-    }
-    
-    .nav-arrow {
-      color: black;
-      background: none;
-      border: none;
-      padding: 0;
-      font-size: 16px;
-    }
-    
-    .nav-arrow:hover { 
-      color: blue; 
-    }
-    
-    /* Favoriten-Button im Vollbild */
-    #favoriteOverlayBtn {
-      display: block !important;
-      margin: 0 15px;
-      width: 24px;
-      height: 24px;
-      cursor: pointer;
-    }
-    
-    #favoriteOverlayBtn:before {
-      content: "";
-      display: block;
-      width: 20px;
-      height: 20px;
-      border: 2px solid #ff69b4;
-      border-radius: 50%;
-      background: transparent;
-    }
-    
-    #favoriteOverlayBtn.active:before {
-      background: #ff69b4;
-      border-color: #ff69b4;
     }
     
     #pinView {
@@ -250,6 +169,17 @@
       border: none !important;
       color: #ff69b4;
       padding: 5px 10px;
+    }
+
+    @media (max-width: 768px) {
+      .thumbnail-container {
+        max-width: 95%;
+      }
+    }
+
+    /* Verstecke nur den Edit-Button (sichtbar bleibt seine Funktion) */
+    #editButton {
+      display: none !important;
     }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -282,17 +212,6 @@
     <input type="file" id="imageUpload" multiple accept="image/*" style="display:none">
   </div>
 
-  <div id="overlay">
-    <div class="image-container">
-      <img id="fullImage">
-    </div>
-    <div class="nav-buttons">
-      <button id="prevBtn" class="nav-arrow">BACK</button>
-      <button id="favoriteOverlayBtn" class="control-btn"></button>
-      <button id="nextBtn" class="nav-arrow">NEXT</button>
-    </div>
-  </div>
-
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAa0f8TC095yg8so6bgQFIWbJ4n4Z4AFDA",
@@ -311,7 +230,6 @@
     let editMode = false;
     let currentPath = [];
     let currentFolderId = null;
-    let currentImageIndex = 0;
     let currentImages = [];
     let favorites = [];
     let currentPendingFolder = null;
@@ -457,12 +375,13 @@
         container.innerHTML = `
           <img src="${url}" class="thumbnail">
           <div class="delete-image" data-index="${index}">×</div>
-          <button class="favorite-btn ${favorites.includes(url) ? 'active' : ''}"></button>
+          <button class="favorite-btn ${favorites.includes(url) ? 'active' : ''}">FAV</button>
         `;
 
-        container.querySelector('.thumbnail').addEventListener('click', () => {
-          currentImageIndex = index;
-          showOverlay();
+        const favBtn = container.querySelector('.favorite-btn');
+        favBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await toggleFavorite(url, favBtn);
         });
 
         container.querySelector('.delete-image').addEventListener('click', async (e) => {
@@ -470,16 +389,11 @@
           await deleteImage(index);
         });
 
-        container.querySelector('.favorite-btn').addEventListener('click', async (e) => {
-          e.stopPropagation();
-          await toggleFavorite(url);
-        });
-
         gallery.appendChild(container);
       });
     }
 
-    async function toggleFavorite(url) {
+    async function toggleFavorite(url, btn) {
       const docRef = db.collection('projects').doc(currentFolderId);
       const isFavorite = favorites.includes(url);
       
@@ -489,39 +403,11 @@
         favorites.push(url);
       }
       
+      btn.classList.toggle('active', !isFavorite);
       await docRef.update({ favorites });
-      renderImageGallery();
-    }
-
-    function showOverlay() {
-      const overlay = document.getElementById('overlay');
-      const fullImage = document.getElementById('fullImage');
-      fullImage.src = currentImages[currentImageIndex];
-      overlay.style.display = 'flex';
-
-      const favoriteBtn = document.getElementById('favoriteOverlayBtn');
-      favoriteBtn.classList.toggle('active', favorites.includes(currentImages[currentImageIndex]));
-
-      document.getElementById('prevBtn').onclick = () => {
-        currentImageIndex = (currentImageIndex - 1 + currentImages.length) % currentImages.length;
-        fullImage.src = currentImages[currentImageIndex];
-        favoriteBtn.classList.toggle('active', favorites.includes(currentImages[currentImageIndex]));
-      };
-
-      document.getElementById('nextBtn').onclick = () => {
-        currentImageIndex = (currentImageIndex + 1) % currentImages.length;
-        fullImage.src = currentImages[currentImageIndex];
-        favoriteBtn.classList.toggle('active', favorites.includes(currentImages[currentImageIndex]));
-      };
-
-      favoriteBtn.onclick = async () => {
-        await toggleFavorite(currentImages[currentImageIndex]);
-        favoriteBtn.classList.toggle('active', favorites.includes(currentImages[currentImageIndex]));
-      };
-
-      overlay.onclick = (e) => {
-        if (e.target === overlay) overlay.style.display = 'none';
-      };
+      
+      document.getElementById('downloadFavorites').style.display = 
+        favorites.length > 0 ? 'block' : 'none';
     }
 
     async function deleteImage(index) {
