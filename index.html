@@ -2,492 +2,650 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Projekt Übersicht</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projektverwaltung</title>
   <style>
-    body {
-      background: #b0b0b0;
-      font-family: monospace;
-      margin: 0;
-      padding: 20px;
+    body { 
+      background: #b0b0b0; 
+      font-family: monospace; 
+      margin: 0; 
+      padding: 20px; 
     }
-
-    .breadcrumb {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      display: flex;
-      gap: 5px;
-      z-index: 1001;
+    
+    .breadcrumb { 
+      position: fixed; 
+      top: 10px; 
+      left: 10px; 
+      display: flex; 
+      gap: 5px; 
+      z-index: 1001; 
     }
-
-    .breadcrumb-item {
-      cursor: pointer;
-      color: black;
-      padding: 0 5px;
+    
+    .breadcrumb-item { 
+      cursor: pointer; 
+      color: black; 
+      padding: 0 5px; 
     }
-
-    .breadcrumb-item:hover {
-      color: blue;
+    
+    .breadcrumb-item:hover { 
+      color: blue; 
     }
-
-    #folderView, #pinView, #imageView {
-      display: none;
+    
+    #folderView, #pinView, #imageView { 
+      display: none; 
     }
-
-    #folderView {
-      display: block;
-      margin-top: 40px;
+    
+    #folderView { 
+      margin-top: 40px; 
     }
-
-    .folder {
-      display: inline-block;
-      text-align: center;
-      margin: 15px;
-      position: relative;
-      vertical-align: top;
+    
+    .folder { 
+      display: inline-block; 
+      text-align: center; 
+      margin: 15px; 
+      position: relative; 
     }
-
-    .folder:hover {
-      outline: 2px solid blue;
+    
+    .folder-icon { 
+      width: 60px; 
+      height: 40px; 
+      background: black; 
+      position: relative; 
+      cursor: pointer; 
     }
-
-    .folder-icon {
-      width: 60px;
-      height: 40px;
-      background: black;
-      position: relative;
-      cursor: pointer;
+    
+    .folder-icon::before { 
+      content: ""; 
+      position: absolute; 
+      top: -8px; 
+      left: 0; 
+      width: 20px; 
+      height: 8px; 
+      background: black; 
     }
-
-    .folder-icon::before {
-      content: "";
-      position: absolute;
-      top: -8px;
-      left: 0;
-      width: 20px;
-      height: 8px;
-      background: black;
+    
+    .folder-name { 
+      margin-top: 5px; 
+      color: black; 
     }
-
-    .folder-name {
-      margin-top: 5px;
-      color: black;
-      padding: 2px;
-    }
-
-    .folder-delete {
-      position: absolute;
-      top: -15px;
-      right: -15px;
-      color: red;
+    
+    .folder-delete { 
+      position: absolute; 
+      top: -15px; 
+      right: -15px; 
+      color: black; 
+      display: none; 
+      cursor: pointer; 
       font-size: 20px;
-      cursor: pointer;
-      display: none;
     }
-
-    .edit-mode .folder-delete {
-      display: block;
+    
+    .edit-mode .folder-delete { 
+      display: block; 
     }
-
-    button {
-      background: none;
-      color: black;
-      border: none;
-      padding: 5px;
-      margin: 2px;
-      cursor: pointer;
-      font-family: monospace;
+    
+    button { 
+      background: none; 
+      border: none; 
+      padding: 10px 15px;
+      cursor: pointer; 
       font-size: 16px;
     }
-
-    button:hover {
-      color: blue;
+    
+    #headerButtons { 
+      position: fixed; 
+      top: 10px; 
+      right: 10px; 
+      display: flex; 
+      gap: 15px; 
     }
-
-    #headerButtons {
+    
+    .image-gallery { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 10px; 
+      margin-top: 60px; 
+    }
+    
+    .thumbnail-container { 
+      width: 200px;
+      height: 200px;
+      position: relative; 
+    }
+    
+    .thumbnail { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: contain; 
+      cursor: pointer; 
+    }
+    
+    .delete-image { 
+      position: absolute; 
+      top: 5px; 
+      right: 5px; 
+      color: black; 
+      display: none; 
+      cursor: pointer; 
+      font-size: 20px;
+      z-index: 100;
+    }
+    
+    .favorite-btn { 
+      position: absolute; 
+      bottom: 5px; 
+      left: 5px; 
+      background: none;
+      border: none;
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+      padding: 0;
+    }
+    
+    .favorite-btn:before { 
+      content: ""; 
+      display: block; 
+      width: 20px; 
+      height: 20px; 
+      border: 2px solid #ff69b4; 
+      border-radius: 50%;
+    }
+    
+    .favorite-btn.active:before { 
+      background: #ff69b4; 
+    }
+    
+    .edit-mode .delete-image { 
+      display: block; 
+    }
+    
+    #overlay { 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: #b0b0b0; 
+      display: none; 
+      justify-content: center; 
+      align-items: center; 
+      z-index: 1000; 
+    }
+    
+    .nav-arrow { 
+      position: fixed; 
+      bottom: 20px; 
+      color: black !important; 
+      font-size: 16px !important; 
+      background: none; 
+      border: none; 
+      cursor: pointer; 
+    }
+    
+    #prevBtn { 
+      left: 20px; 
+    }
+    
+    #nextBtn { 
+      right: 20px; 
+    }
+    
+    .nav-arrow:hover { 
+      color: blue !important; 
+    }
+    
+    #fullImage { 
+      max-width: 90%; 
+      max-height: 70%; 
+      object-fit: contain; 
+    }
+    
+    .overlay-controls { 
+      position: fixed; 
+      bottom: 20px; 
+      left: 50%; 
+      transform: translateX(-50%); 
+      display: flex; 
+      gap: 15px; 
+    }
+    
+    #favoriteOverlayBtn {
       position: fixed;
-      top: 10px;
-      right: 10px;
-      display: flex;
-      gap: 10px;
-      z-index: 1000;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
     }
-
-    .image-gallery {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin: 60px 20px 20px;
-      justify-content: flex-start;
-    }
-
-    .thumbnail-container {
-      position: relative;
-      margin: 5px;
-    }
-
-    .thumbnail {
-      width: 120px;
-      height: 120px;
-      object-fit: cover;
-      cursor: pointer;
-    }
-
-    .thumbnail-controls {
-      position: absolute;
-      bottom: 5px;
-      left: 5px;
-      right: 5px;
-      display: flex;
-      justify-content: space-between;
-      background: rgba(255,255,255,0.8);
-      padding: 2px;
-    }
-
-    .delete-image {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      color: red;
-      cursor: pointer;
-      display: none;
-    }
-
-    .edit-mode .delete-image {
+    
+    #favoriteOverlayBtn:before {
+      content: "";
       display: block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #ff69b4;
+      border-radius: 50%;
     }
-
-    #overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.9);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
+    
+    #favoriteOverlayBtn.active:before {
+      background: #ff69b4;
     }
-
-    #fullsizeImg {
-      max-width: 90%;
-      max-height: 90%;
-    }
-
-    .nav-arrow {
+    
+    #pinView {
       position: fixed;
       top: 50%;
-      transform: translateY(-50%);
-      font-size: 40px;
-      cursor: pointer;
-      color: white;
-      text-shadow: 0 0 5px black;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1003;
     }
-
-    #prevBtn {
-      left: 20px;
-    }
-
-    #nextBtn {
-      right: 20px;
-    }
-
-    #resetData {
-      position: fixed;
-      bottom: 10px;
-      left: 10px;
-      color: red;
-    }
-
-    #pinView {
-      text-align: center;
-      margin-top: 100px;
-    }
-
+    
     #pinInput {
-      font-size: 16px;
-      padding: 5px;
-      width: 120px;
+      border: 2px solid black;
+      padding: 8px;
+      margin-right: 10px;
+    }
+
+    #downloadFavorites {
+      border: none !important;
+      color: #ff69b4;
+      padding: 5px 10px;
     }
   </style>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
 </head>
 <body>
-  <div class="breadcrumb">
-    <div class="breadcrumb-item" onclick="showFolderView()">Jean Wolf</div>
-  </div>
-
+  <div class="breadcrumb"></div>
   <div id="headerButtons">
     <button id="editButton">Edit</button>
-    <button id="addProject" style="display:none">+</button>
-    <button id="uploadButton" style="display:none">↑</button>
+    <button id="downloadFavorites" style="display:none">↓ Favoriten</button>
+    <button id="addProject" style="display:none">+ Neuer Ordner</button>
+    <button id="uploadButton" style="display:none">↑ Hochladen</button>
   </div>
 
   <div id="folderView">
     <div id="foldersContainer"></div>
   </div>
 
-  <div id="pinView">
-    <input type="password" id="pinInput" placeholder="PIN eingeben">
-    <button id="cancelPin" onclick="showFolderView()">✕</button>
+  <div id="pinView" style="display:none;">
+    <input type="password" id="pinInput" placeholder="PIN">
+    <button id="submitPin">OK</button>
+    <button id="cancelPin">Abbrechen</button>
   </div>
 
   <div id="imageView">
     <div class="image-gallery"></div>
-    <input type="file" id="imageUpload" multiple accept="image/*" style="display: none;">
+    <input type="file" id="imageUpload" multiple accept="image/*" style="display:none">
   </div>
 
-  <div id="overlay"></div>
+  <div id="overlay">
+    <img id="fullImage">
+    <button id="prevBtn" class="nav-arrow">BACK</button>
+    <button id="nextBtn" class="nav-arrow">NEXT</button>
+    <div class="overlay-controls">
+      <button id="favoriteOverlayBtn" class="control-btn"></button>
+    </div>
+  </div>
 
   <script>
-    const SUPABASE_URL = 'https://mecfvgraoeedssfzwomu.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lY2Z2Z3Jhb2VlZHNzZnp3b211Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNjYzNTgsImV4cCI6MjA2MTc0MjM1OH0.qUwEYKTEjouCDUwIcG6AQrsnS9c3AIfpRwNNTatClEs';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const firebaseConfig = {
+      apiKey: "AIzaSyAa0f8TC095yg8so6bgQFIWbJ4n4Z4AFDA",
+      authDomain: "jeanwolf.firebaseapp.com",
+      projectId: "jeanwolf",
+      storageBucket: "jeanwolf.firebasestorage.app",
+      messagingSenderId: "615121748216",
+      appId: "1:615121748216:web:d60808a70e5e869b743b0d",
+      measurementId: "G-HNP0ZS7VDW"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const storage = firebase.storage();
 
     let editMode = false;
-    let currentProject = null;
     let currentPath = [];
+    let currentFolderId = null;
+    let currentImageIndex = 0;
+    let currentImages = [];
+    let favorites = [];
+    let currentPendingFolder = null;
+    let unsubscribeFolders = null;
 
-    async function loadProjects() {
-      try {
-        const parentId = currentPath.length > 0 ? currentPath[currentPath.length-1] : null;
-        
-        const { data, error } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('parent_id', parentId)
-          .order('created_at');
+    function initFirestoreListener() {
+      if (unsubscribeFolders) unsubscribeFolders();
+      
+      const parentId = currentPath.length > 0 
+        ? currentPath[currentPath.length - 1].id 
+        : null;
 
-        if (error) throw error;
-
-        renderFolders(data);
-        updateBreadcrumb();
-      } catch (error) {
-        console.error('Fehler beim Laden:', error);
-        alert('Fehler beim Laden der Daten!');
-      }
+      unsubscribeFolders = db.collection('projects')
+        .where('parentId', '==', parentId)
+        .orderBy('createdAt')
+        .onSnapshot(snapshot => {
+          renderFolders(snapshot.docs);
+          if (currentFolderId) renderImageGallery();
+        }, error => console.error('Listener error:', error));
     }
 
-    async function createProject(projectData) {
-      try {
-        const { data, error } = await supabase
-          .from('projects')
-          .insert(projectData)
-          .select()
-          .single();
+    async function renderFolders(docs) {
+      const container = document.getElementById('foldersContainer');
+      container.innerHTML = '';
 
-        if (error) throw error;
-        return data;
-      } catch (error) {
-        console.error('Erstellungsfehler:', error);
-        alert('Fehler beim Erstellen!');
-        return null;
-      }
-    }
-
-    async function uploadImage(file) {
-      try {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `${currentProject.id}/${fileName}`;
-
-        const { data, error } = await supabase.storage
-          .from('project_files')
-          .upload(filePath, file);
-
-        if (error) throw error;
-
-        return supabase.storage
-          .from('project_files')
-          .getPublicUrl(data.path).data.publicUrl;
-      } catch (error) {
-        console.error('Upload-Fehler:', error);
-        alert('Bildupload fehlgeschlagen!');
-        return null;
-      }
-    }
-
-    async function deleteProject(projectId) {
-      try {
-        // Lösche Bilder
-        const { data: project } = await supabase
-          .from('projects')
-          .select('images')
-          .eq('id', projectId)
-          .single();
-
-        if (project.images.length > 0) {
-          const filesToDelete = project.images.map(url => 
-            url.split('project_files/')[1]
-          );
-          await supabase.storage.from('project_files').remove(filesToDelete);
-        }
-
-        // Lösche Projekt
-        const { error } = await supabase
-          .from('projects')
-          .delete()
-          .eq('id', projectId);
-
-        if (error) throw error;
-        
-        loadProjects();
-      } catch (error) {
-        console.error('Löschfehler:', error);
-        alert('Löschen fehlgeschlagen!');
-      }
-    }
-
-    function renderFolders(projects) {
-      const container = document.getElementById("foldersContainer");
-      container.innerHTML = "";
-
-      projects.forEach(project => {
-        const folder = document.createElement("div");
-        folder.className = "folder";
+      docs.forEach(doc => {
+        const project = doc.data();
+        const folder = document.createElement('div');
+        folder.className = 'folder';
         folder.innerHTML = `
           <div class="folder-icon"></div>
           <div class="folder-name">${project.name}</div>
           <div class="folder-delete">×</div>
         `;
 
-        folder.querySelector('.folder-icon').addEventListener('click', () => {
-          if (project.pin && !editMode) {
-            showPinView(project);
+        folder.querySelector('.folder-icon').addEventListener('click', async () => {
+          const docSnap = await db.collection('projects').doc(doc.id).get();
+          const data = docSnap.data();
+          
+          if (data.pin) {
+            currentPendingFolder = doc.id;
+            document.getElementById('pinView').style.display = 'block';
           } else {
-            currentPath.push(project.id);
+            currentPath.push({ id: doc.id, name: project.name });
+            currentFolderId = doc.id;
+            updateBreadcrumb();
+            initFirestoreListener();
             showImageView();
           }
         });
 
-        folder.querySelector('.folder-delete').addEventListener('click', (e) => {
+        folder.querySelector('.folder-delete').addEventListener('click', async (e) => {
           e.stopPropagation();
-          if (confirm("Ordner wirklich löschen?")) deleteProject(project.id);
+          if (confirm('Ordner und alle Unterordner sowie Bilder löschen?')) {
+            await deleteFolder(doc.id);
+            initFirestoreListener();
+          }
         });
 
         container.appendChild(folder);
       });
     }
 
-    async function showImageView() {
-      try {
-        const { data, error } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('id', currentPath[currentPath.length-1])
-          .single();
+    async function deleteFolder(folderId) {
+      const subfolders = await db.collection('projects').where('parentId', '==', folderId).get();
+      await Promise.all(subfolders.docs.map(doc => deleteFolder(doc.id)));
 
-        if (error) throw error;
-
-        currentProject = data;
-        document.getElementById("folderView").style.display = "none";
-        document.getElementById("imageView").style.display = "block";
-        document.getElementById("pinView").style.display = "none";
-        
-        renderImageGallery(data.images);
-        updateBreadcrumb();
-      } catch (error) {
-        console.error('Ladefehler:', error);
-        alert('Ordner konnte nicht geladen werden!');
-      }
+      const docRef = db.collection('projects').doc(folderId);
+      const doc = await docRef.get();
+      const images = doc.data().images || [];
+      
+      await Promise.all(images.map(url => 
+        storage.refFromURL(url).delete().catch(console.error)
+      ));
+      
+      await docRef.delete();
     }
 
-    function renderImageGallery(images) {
-      const gallery = document.querySelector('.image-gallery');
-      gallery.innerHTML = images.map(img => `
-        <div class="thumbnail-container">
-          <img src="${img}" class="thumbnail">
-          <div class="thumbnail-controls">
-            <button onclick="downloadImage('${img}')">↓</button>
-          </div>
-          <div class="delete-image" onclick="deleteImage('${img}')">×</div>
-        </div>
-      `).join('');
+    async function checkPin() {
+      const doc = await db.collection('projects').doc(currentPendingFolder).get();
+      return doc.data().pin === document.getElementById('pinInput').value;
+    }
 
-      document.querySelectorAll('.thumbnail').forEach(thumb => {
-        thumb.addEventListener('click', () => showOverlay(thumb.src));
+    document.getElementById('submitPin').addEventListener('click', async () => {
+      if (await checkPin()) {
+        currentPath.push({ 
+          id: currentPendingFolder, 
+          name: (await db.collection('projects').doc(currentPendingFolder).get()).data().name 
+        });
+        currentFolderId = currentPendingFolder;
+        updateBreadcrumb();
+        initFirestoreListener();
+        showImageView();
+        document.getElementById('pinView').style.display = 'none';
+      } else {
+        alert('Falscher PIN!');
+      }
+    });
+
+    document.getElementById('cancelPin').addEventListener('click', () => {
+      document.getElementById('pinView').style.display = 'none';
+    });
+
+    function updateBreadcrumb() {
+      const bc = document.querySelector('.breadcrumb');
+      bc.innerHTML = currentPath.reduce((acc, cur, index) => {
+        return acc + `<div class="breadcrumb-item" data-index="${index}">${cur.name}</div> / `;
+      }, '<div class="breadcrumb-item" data-index="-1">Jean Wolf</div> / ');
+
+      document.querySelectorAll('.breadcrumb-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const index = parseInt(item.dataset.index);
+          if (index === -1) {
+            currentPath = [];
+            currentFolderId = null;
+          } else {
+            currentPath = currentPath.slice(0, index + 1);
+            currentFolderId = currentPath[index].id;
+          }
+          updateBreadcrumb();
+          initFirestoreListener();
+          showFolderView();
+        });
       });
     }
 
-    async function deleteImage(url) {
-      try {
-        const path = url.split('project_files/')[1];
-        
-        await supabase.storage.from('project_files').remove([path]);
-        
-        const { error } = await supabase
-          .from('projects')
-          .update({
-            images: currentProject.images.filter(img => img !== url)
-          })
-          .eq('id', currentProject.id);
+    async function renderImageGallery() {
+      const gallery = document.querySelector('.image-gallery');
+      gallery.innerHTML = '';
+      
+      if (!currentFolderId) return;
+      
+      const doc = await db.collection('projects').doc(currentFolderId).get();
+      currentImages = doc.exists ? doc.data().images || [] : [];
+      favorites = doc.data().favorites || [];
 
-        if (error) throw error;
+      document.getElementById('downloadFavorites').style.display = 
+        favorites.length > 0 ? 'block' : 'none';
 
-        currentProject.images = currentProject.images.filter(img => img !== url);
-        renderImageGallery(currentProject.images);
-      } catch (error) {
-        console.error('Bildlöschung fehlgeschlagen:', error);
-        alert('Löschen fehlgeschlagen!');
-      }
+      currentImages.forEach((url, index) => {
+        const container = document.createElement('div');
+        container.className = 'thumbnail-container';
+        container.innerHTML = `
+          <img src="${url}" class="thumbnail">
+          <div class="delete-image" data-index="${index}">×</div>
+          <button class="favorite-btn ${favorites.includes(url) ? 'active' : ''}"></button>
+        `;
+
+        container.querySelector('.thumbnail').addEventListener('click', () => {
+          currentImageIndex = index;
+          showOverlay();
+        });
+
+        container.querySelector('.delete-image').addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await deleteImage(index);
+        });
+
+        container.querySelector('.favorite-btn').addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await toggleFavorite(url);
+        });
+
+        gallery.appendChild(container);
+      });
     }
 
-    // Event-Listener und restliche Funktionen
+    async function toggleFavorite(url) {
+      const docRef = db.collection('projects').doc(currentFolderId);
+      const isFavorite = favorites.includes(url);
+      
+      if (isFavorite) {
+        favorites = favorites.filter(f => f !== url);
+      } else {
+        favorites.push(url);
+      }
+      
+      await docRef.update({ favorites });
+      renderImageGallery();
+    }
+
+    function showOverlay() {
+      const overlay = document.getElementById('overlay');
+      const fullImage = document.getElementById('fullImage');
+      fullImage.src = currentImages[currentImageIndex];
+      overlay.style.display = 'flex';
+
+      const favoriteBtn = document.getElementById('favoriteOverlayBtn');
+      favoriteBtn.classList.toggle('active', favorites.includes(currentImages[currentImageIndex]));
+
+      document.getElementById('prevBtn').onclick = () => {
+        currentImageIndex = (currentImageIndex - 1 + currentImages.length) % currentImages.length;
+        fullImage.src = currentImages[currentImageIndex];
+        favoriteBtn.classList.toggle('active', favorites.includes(currentImages[currentImageIndex]));
+      };
+
+      document.getElementById('nextBtn').onclick = () => {
+        currentImageIndex = (currentImageIndex + 1) % currentImages.length;
+        fullImage.src = currentImages[currentImageIndex];
+        favoriteBtn.classList.toggle('active', favorites.includes(currentImages[currentImageIndex]));
+      };
+
+      favoriteBtn.onclick = async () => {
+        await toggleFavorite(currentImages[currentImageIndex]);
+        favoriteBtn.classList.toggle('active', favorites.includes(currentImages[currentImageIndex]));
+      };
+
+      overlay.onclick = (e) => {
+        if (e.target === overlay) overlay.style.display = 'none';
+      };
+    }
+
+    async function deleteImage(index) {
+      const docRef = db.collection('projects').doc(currentFolderId);
+      const doc = await docRef.get();
+      const images = [...doc.data().images];
+      const [url] = images.splice(index, 1);
+      
+      await storage.refFromURL(url).delete();
+      await docRef.update({ images });
+      renderImageGallery();
+    }
+
+    document.getElementById('uploadButton').addEventListener('click', () => {
+      document.getElementById('imageUpload').click();
+    });
+
+    document.getElementById('imageUpload').addEventListener('change', async function(e) {
+      if (!currentFolderId) {
+        alert('Bitte Ordner auswählen!');
+        return;
+      }
+
+      const files = Array.from(e.target.files);
+      
+      for (const file of files) {
+        try {
+          const sanitizedName = file.name.replace(/[^a-z0-9_.-]/gi, '_');
+          const storageRef = storage.ref(
+            `projects/${currentFolderId}/${Date.now()}_${sanitizedName}`
+          );
+          
+          await storageRef.put(file);
+          const url = await storageRef.getDownloadURL();
+          
+          await db.collection('projects').doc(currentFolderId).update({
+            images: firebase.firestore.FieldValue.arrayUnion(url)
+          });
+        } catch (error) {
+          console.error('Upload Fehler:', error);
+          alert(`Fehler bei ${file.name}: ${error.message}`);
+        }
+      }
+      this.value = '';
+      renderImageGallery();
+    });
+
     document.getElementById('editButton').addEventListener('click', () => {
       editMode = !editMode;
       document.body.classList.toggle('edit-mode', editMode);
       document.getElementById('editButton').textContent = editMode ? 'Speichern' : 'Edit';
       document.getElementById('addProject').style.display = editMode ? 'block' : 'none';
       document.getElementById('uploadButton').style.display = editMode ? 'block' : 'none';
-      loadProjects();
     });
 
     document.getElementById('addProject').addEventListener('click', async () => {
-      const name = prompt("Ordnername:");
+      const name = prompt('Ordnername:');
+      const pin = prompt('PIN (optional):');
       if (!name) return;
 
-      const pin = prompt("PIN (optional):");
-      
-      const project = {
-        name: name.trim(),
-        pin: pin?.trim() || null,
-        parent_id: currentPath.length > 0 ? currentPath[currentPath.length-1] : null,
-        images: []
-      };
-
-      const newProject = await createProject(project);
-      if (newProject) loadProjects();
-    });
-
-    document.getElementById('uploadButton').addEventListener('click', () => {
-      document.getElementById('imageUpload').click();
-    });
-
-    document.getElementById('imageUpload').addEventListener('change', async (e) => {
-      const files = Array.from(e.target.files);
-      const urls = await Promise.all(files.map(file => uploadImage(file)));
-      
-      if (urls.every(url => url)) {
-        const { error } = await supabase
-          .from('projects')
-          .update({ images: [...currentProject.images, ...urls] })
-          .eq('id', currentProject.id);
-
-        if (!error) {
-          currentProject.images = [...currentProject.images, ...urls];
-          renderImageGallery(currentProject.images);
-        }
+      try {
+        await db.collection('projects').add({
+          name: name.trim(),
+          pin: pin || null,
+          parentId: currentFolderId,
+          images: [],
+          favorites: [],
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastModified: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        initFirestoreListener();
+      } catch (error) {
+        alert('Fehler: ' + error.message);
       }
     });
 
-    // Initialisierung
-    async function initialize() {
-      await loadProjects();
-      showFolderView();
+    async function downloadAllFavorites() {
+      if (favorites.length === 0) {
+        alert('Keine favorisierten Bilder vorhanden!');
+        return;
+      }
+
+      const zip = new JSZip();
+      const folder = zip.folder("favorites");
+      
+      try {
+        const promises = favorites.map(async (url, index) => {
+          try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Fehler beim Laden: ${response.status}`);
+            const blob = await response.blob();
+            const filename = url.split('/').pop().split('?')[0];
+            folder.file(filename, blob);
+          } catch (error) {
+            console.error(`Fehler bei Bild ${index + 1}:`, error);
+          }
+        });
+
+        await Promise.all(promises);
+        
+        const content = await zip.generateAsync({ type: "blob" });
+        saveAs(content, "favorites.zip");
+      } catch (error) {
+        console.error('Download error:', error);
+        alert('Fehler beim Erstellen des ZIP-Archivs!');
+      }
     }
 
-    initialize();
+    document.getElementById('downloadFavorites').addEventListener('click', downloadAllFavorites);
+
+    function showFolderView() {
+      document.getElementById('folderView').style.display = 'block';
+      document.getElementById('imageView').style.display = 'none';
+      document.getElementById('pinView').style.display = 'none';
+      document.getElementById('downloadFavorites').style.display = 'none';
+      initFirestoreListener();
+    }
+
+    function showImageView() {
+      document.getElementById('folderView').style.display = 'none';
+      document.getElementById('imageView').style.display = 'block';
+      document.getElementById('pinView').style.display = 'none';
+      document.getElementById('downloadFavorites').style.display = 
+        favorites.length > 0 ? 'block' : 'none';
+    }
+
+    updateBreadcrumb();
+    initFirestoreListener();
+    showFolderView();
   </script>
 </body>
 </html>
