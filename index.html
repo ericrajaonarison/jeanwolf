@@ -237,96 +237,77 @@
 
     function initFirestoreListener() {
       if (unsubscribeFolders) unsubscribeFolders();
-      
-      const parentId = currentPath.length > 0 
-        ? currentPath[currentPath.length - 1].id 
-        : null;
-
+      const parentId = currentPath.length ? currentPath[currentPath.length - 1].id : null;
       unsubscribeFolders = db.collection('projects')
         .where('parentId', '==', parentId)
         .orderBy('createdAt')
         .onSnapshot(snapshot => {
           renderFolders(snapshot.docs);
           if (currentFolderId) renderImageGallery();
-        }, error => console.error('Listener error:', error));
+        }, console.error);
     }
 
     async function renderFolders(docs) {
       const container = document.getElementById('foldersContainer');
       container.innerHTML = '';
-
       docs.forEach(doc => {
-        const project = doc.data();
+        const p = doc.data();
         const folder = document.createElement('div');
         folder.className = 'folder';
         folder.innerHTML = `
           <div class="folder-icon"></div>
-          <div class="folder-name">${project.name}</div>
+          <div class="folder-name">${p.name}</div>
           <div class="folder-delete">×</div>
         `;
-
         folder.querySelector('.folder-icon').addEventListener('click', async () => {
-          const docSnap = await db.collection('projects').doc(doc.id).get();
-          const data = docSnap.data();
-          
-          if (data.pin) {
+          const snap = await db.collection('projects').doc(doc.id).get();
+          if (snap.data().pin) {
             currentPendingFolder = doc.id;
             document.getElementById('pinView').style.display = 'block';
           } else {
-            currentPath.push({ id: doc.id, name: project.name });
+            currentPath.push({ id: doc.id, name: p.name });
             currentFolderId = doc.id;
             updateBreadcrumb();
             initFirestoreListener();
             showImageView();
           }
         });
-
-        folder.querySelector('.folder-delete').addEventListener('click', async (e) => {
+        folder.querySelector('.folder-delete').addEventListener('click', async e => {
           e.stopPropagation();
           if (confirm('Ordner und alle Unterordner sowie Bilder löschen?')) {
             await deleteFolder(doc.id);
             initFirestoreListener();
           }
         });
-
         container.appendChild(folder);
       });
     }
 
-    async function deleteFolder(folderId) {
-      const subfolders = await db.collection('projects').where('parentId', '==', folderId).get();
-      await Promise.all(subfolders.docs.map(doc => deleteFolder(doc.id)));
-
-      const docRef = db.collection('projects').doc(folderId);
-      const doc = await docRef.get();
-      const images = doc.data().images || [];
-      
-      await Promise.all(images.map(url => 
-        storage.refFromURL(url).delete().catch(console.error)
-      ));
-      
-      await docRef.delete();
+    async function deleteFolder(id) {
+      const subs = await db.collection('projects').where('parentId', '==', id).get();
+      await Promise.all(subs.docs.map(d => deleteFolder(d.id)));
+      const ref = db.collection('projects').doc(id);
+      const data = (await ref.get()).data();
+      const imgs = data.images || [];
+      await Promise.all(imgs.map(u => storage.refFromURL(u).delete().catch(console.error)));
+      await ref.delete();
     }
 
     async function checkPin() {
-      const doc = await db.collection('projects').doc(currentPendingFolder).get();
-      return doc.data().pin === document.getElementById('pinInput').value;
+      const d = (await db.collection('projects').doc(currentPendingFolder).get()).data();
+      return d.pin === document.getElementById('pinInput').value;
     }
 
     document.getElementById('submitPin').addEventListener('click', async () => {
       if (await checkPin()) {
-        currentPath.push({ 
-          id: currentPendingFolder, 
-          name: (await db.collection('projects').doc(currentPendingFolder).get()).data().name 
-        });
+        const snap = await db.collection('projects').doc(currentPendingFolder).get();
+        currentPath.push({ id: currentPendingFolder, name: snap.data().name });
         currentFolderId = currentPendingFolder;
         updateBreadcrumb();
         initFirestoreListener();
         showImageView();
         document.getElementById('pinView').style.display = 'none';
-      } else {
-        alert('Falscher PIN!');
-      }
+      } else alert('Falscher PIN!');
     });
 
     document.getElementById('cancelPin').addEventListener('click', () => {
@@ -335,19 +316,17 @@
 
     function updateBreadcrumb() {
       const bc = document.querySelector('.breadcrumb');
-      bc.innerHTML = currentPath.reduce((acc, cur, index) => {
-        return acc + `<div class="breadcrumb-item" data-index="${index}">${cur.name}</div> / `;
-      }, '<div class="breadcrumb-item" data-index="-1">Jean Wolf</div> / ');
-
-      document.querySelectorAll('.breadcrumb-item').forEach(item => {
+      bc.innerHTML = currentPath.reduce((acc, cur, i) =>
+        acc + `<div class="breadcrumb-item" data-index="${i}">${cur.name}</div> / `,
+        '<div class="breadcrumb-item" data-index="-1">Jean Wolf</div> / '
+      );
+      bc.querySelectorAll('.breadcrumb-item').forEach(item => {
         item.addEventListener('click', () => {
-          const index = parseInt(item.dataset.index);
-          if (index === -1) {
-            currentPath = [];
-            currentFolderId = null;
-          } else {
-            currentPath = currentPath.slice(0, index + 1);
-            currentFolderId = currentPath[index].id;
+          const i = +item.dataset.index;
+          if (i < 0) currentPath = [], currentFolderId = null;
+          else {
+            currentPath = currentPath.slice(0, i+1);
+            currentFolderId = currentPath[i].id;
           }
           updateBreadcrumb();
           initFirestoreListener();
@@ -357,98 +336,74 @@
     }
 
     async function renderImageGallery() {
-      const gallery = document.querySelector('.image-gallery');
-      gallery.innerHTML = '';
-      
+      const gal = document.querySelector('.image-gallery');
+      gal.innerHTML = '';
       if (!currentFolderId) return;
-      
-      const doc = await db.collection('projects').doc(currentFolderId).get();
-      currentImages = doc.exists ? doc.data().images || [] : [];
-      favorites = doc.data().favorites || [];
+      const snap = await db.collection('projects').doc(currentFolderId).get();
+      currentImages = snap.data().images || [];
+      favorites = snap.data().favorites || [];
+      document.getElementById('downloadFavorites').style.display =
+        favorites.length ? 'block' : 'none';
 
-      document.getElementById('downloadFavorites').style.display = 
-        favorites.length > 0 ? 'block' : 'none';
-
-      currentImages.forEach((url, index) => {
-        const container = document.createElement('div');
-        container.className = 'thumbnail-container';
-        container.innerHTML = `
+      currentImages.forEach((url, idx) => {
+        const cont = document.createElement('div');
+        cont.className = 'thumbnail-container';
+        cont.innerHTML = `
           <img src="${url}" class="thumbnail">
-          <div class="delete-image" data-index="${index}">×</div>
-          <button class="favorite-btn ${favorites.includes(url) ? 'active' : ''}">FAV</button>
+          <div class="delete-image" data-index="${idx}">×</div>
+          <button class="favorite-btn ${favorites.includes(url)?'active':''}">FAV</button>
         `;
-
-        const favBtn = container.querySelector('.favorite-btn');
-        favBtn.addEventListener('click', async (e) => {
+        cont.querySelector('.favorite-btn').addEventListener('click', async e => {
           e.stopPropagation();
-          await toggleFavorite(url, favBtn);
+          await toggleFavorite(url, e.currentTarget);
         });
-
-        container.querySelector('.delete-image').addEventListener('click', async (e) => {
+        cont.querySelector('.delete-image').addEventListener('click', async e => {
           e.stopPropagation();
-          await deleteImage(index);
+          await deleteImage(idx);
         });
-
-        gallery.appendChild(container);
+        gal.appendChild(cont);
       });
     }
 
     async function toggleFavorite(url, btn) {
-      const docRef = db.collection('projects').doc(currentFolderId);
-      const isFavorite = favorites.includes(url);
-      
-      if (isFavorite) {
-        favorites = favorites.filter(f => f !== url);
-      } else {
-        favorites.push(url);
-      }
-      
-      btn.classList.toggle('active', !isFavorite);
-      await docRef.update({ favorites });
-      
-      document.getElementById('downloadFavorites').style.display = 
-        favorites.length > 0 ? 'block' : 'none';
+      const ref = db.collection('projects').doc(currentFolderId);
+      const isFav = favorites.includes(url);
+      favorites = isFav
+        ? favorites.filter(u => u !== url)
+        : [...favorites, url];
+      btn.classList.toggle('active', !isFav);
+      await ref.update({ favorites });
+      document.getElementById('downloadFavorites').style.display =
+        favorites.length ? 'block' : 'none';
     }
 
-    async function deleteImage(index) {
-      const docRef = db.collection('projects').doc(currentFolderId);
-      const doc = await docRef.get();
-      const images = [...doc.data().images];
-      const [url] = images.splice(index, 1);
-      
+    async function deleteImage(idx) {
+      const ref = db.collection('projects').doc(currentFolderId);
+      const snap = await ref.get();
+      const imgs = [...snap.data().images];
+      const [url] = imgs.splice(idx,1);
       await storage.refFromURL(url).delete();
-      await docRef.update({ images });
+      await ref.update({ images: imgs });
       renderImageGallery();
     }
 
-    document.getElementById('uploadButton').addEventListener('click', () => {
-      document.getElementById('imageUpload').click();
-    });
+    document.getElementById('uploadButton').addEventListener('click', () =>
+      document.getElementById('imageUpload').click()
+    );
 
     document.getElementById('imageUpload').addEventListener('change', async function(e) {
-      if (!currentFolderId) {
-        alert('Bitte Ordner auswählen!');
-        return;
-      }
-
-      const files = Array.from(e.target.files);
-      
-      for (const file of files) {
+      if (!currentFolderId) return alert('Bitte Ordner auswählen!');
+      for (const file of Array.from(e.target.files)) {
         try {
-          const sanitizedName = file.name.replace(/[^a-z0-9_.-]/gi, '_');
-          const storageRef = storage.ref(
-            `projects/${currentFolderId}/${Date.now()}_${sanitizedName}`
-          );
-          
-          await storageRef.put(file);
-          const url = await storageRef.getDownloadURL();
-          
-          await db.collection('projects').doc(currentFolderId).update({
-            images: firebase.firestore.FieldValue.arrayUnion(url)
-          });
-        } catch (error) {
-          console.error('Upload Fehler:', error);
-          alert(`Fehler bei ${file.name}: ${error.message}`);
+          const safe = file.name.replace(/[^a-z0-9_.-]/gi,'_');
+          const ref = storage.ref(`projects/${currentFolderId}/${Date.now()}_${safe}`);
+          await ref.put(file);
+          const url = await ref.getDownloadURL();
+          await db.collection('projects').doc(currentFolderId)
+            .update({ images: firebase.firestore.FieldValue.arrayUnion(url) });
+        } catch(err) {
+          console.error('Upload Fehler:', err);
+          alert(`Fehler bei ${file.name}: ${err.message}`);
         }
       }
       this.value = '';
@@ -458,20 +413,19 @@
     document.getElementById('editButton').addEventListener('click', () => {
       editMode = !editMode;
       document.body.classList.toggle('edit-mode', editMode);
-      document.getElementById('editButton').textContent = editMode ? 'Speichern' : 'Edit';
-      document.getElementById('addProject').style.display = editMode ? 'block' : 'none';
-      document.getElementById('uploadButton').style.display = editMode ? 'block' : 'none';
+      document.getElementById('editButton').textContent = editMode?'Speichern':'Edit';
+      document.getElementById('addProject').style.display = editMode?'block':'none';
+      document.getElementById('uploadButton').style.display = editMode?'block':'none';
     });
 
     document.getElementById('addProject').addEventListener('click', async () => {
       const name = prompt('Ordnername:');
       const pin = prompt('PIN (optional):');
       if (!name) return;
-
       try {
         await db.collection('projects').add({
           name: name.trim(),
-          pin: pin || null,
+          pin: pin||null,
           parentId: currentFolderId,
           images: [],
           favorites: [],
@@ -479,44 +433,48 @@
           lastModified: firebase.firestore.FieldValue.serverTimestamp()
         });
         initFirestoreListener();
-      } catch (error) {
-        alert('Fehler: ' + error.message);
+      } catch(err) {
+        alert('Fehler: '+err.message);
       }
     });
 
+    // Neue, robuste Download‑Funktion
     async function downloadAllFavorites() {
-      if (favorites.length === 0) {
-        alert('Keine favorisierten Bilder vorhanden!');
-        return;
+      if (!favorites.length) {
+        return alert('Keine favorisierten Bilder vorhanden!');
       }
-
       const zip = new JSZip();
-      const folder = zip.folder("favorites");
-      
-      try {
-        const promises = favorites.map(async (url, index) => {
-          try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`Fehler beim Laden: ${response.status}`);
-            const blob = await response.blob();
-            const filename = url.split('/').pop().split('?')[0];
-            folder.file(filename, blob);
-          } catch (error) {
-            console.error(`Fehler bei Bild ${index + 1}:`, error);
-          }
+      const fld = zip.folder("favorites");
+      // XHR‑Blobs holen (besser als fetch bei CORS)
+      function fetchBlob(url) {
+        return new Promise((res, rej) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('GET', url);
+          xhr.responseType = 'blob';
+          xhr.onload = () => xhr.status===200 ? res(xhr.response) : rej(xhr.status);
+          xhr.onerror = () => rej('Netzwerkfehler');
+          xhr.send();
         });
-
-        await Promise.all(promises);
-        
+      }
+      for (const url of favorites) {
+        try {
+          const blob = await fetchBlob(url);
+          const name = url.split('/').pop().split('?')[0];
+          fld.file(name, blob);
+        } catch(err) {
+          console.error('Fehler beim Laden von', url, err);
+        }
+      }
+      try {
         const content = await zip.generateAsync({ type: "blob" });
         saveAs(content, "favorites.zip");
-      } catch (error) {
-        console.error('Download error:', error);
-        alert('Fehler beim Erstellen des ZIP-Archivs!');
+      } catch(err) {
+        console.error('ZIP-Fehler:', err);
+        alert('Fehler beim Erstellen der ZIP-Datei!');
       }
     }
-
-    document.getElementById('downloadFavorites').addEventListener('click', downloadAllFavorites);
+    document.getElementById('downloadFavorites')
+      .addEventListener('click', downloadAllFavorites);
 
     function showFolderView() {
       document.getElementById('folderView').style.display = 'block';
@@ -525,13 +483,12 @@
       document.getElementById('downloadFavorites').style.display = 'none';
       initFirestoreListener();
     }
-
     function showImageView() {
       document.getElementById('folderView').style.display = 'none';
       document.getElementById('imageView').style.display = 'block';
       document.getElementById('pinView').style.display = 'none';
-      document.getElementById('downloadFavorites').style.display = 
-        favorites.length > 0 ? 'block' : 'none';
+      document.getElementById('downloadFavorites').style.display =
+        favorites.length ? 'block' : 'none';
     }
 
     updateBreadcrumb();
