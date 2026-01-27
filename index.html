@@ -157,43 +157,41 @@
             .cube-face-bottom { transform: rotateX(-90deg) translateZ(300px); }
         }
 
-        /* Mobile styles - PROPER SCALING FIX */
+        /* Mobile styles - LARGER PLAYER */
         @media (max-width: 768px) {
             .scene {
                 align-items: center;
                 justify-content: center;
                 padding-top: env(safe-area-inset-top);
-                perspective: 800px; /* Reduce perspective for mobile */
+                perspective: 800px;
             }
             
             .cube-container {
-                width: 320px;
-                height: 320px;
+                width: 340px; /* Slightly larger cube */
+                height: 340px;
             }
             
-            /* FIXED: Proper scaling calculation for mobile */
-            /* Original player size: 660x450, scaled to fit in 320px cube */
-            /* 320px / 660px = 0.4848 scale factor */
+            /* LARGER: Original player 660x450, but let's make it wider */
             .player-container {
-                width: 660px;
-                height: 450px;
-                transform: scale(0.48); /* Match the cube size ratio */
+                width: 720px; /* Wider player container */
+                height: 480px; /* Slightly taller for better aspect ratio */
+                transform: scale(0.52); /* Adjusted scale for larger cube */
             }
             
             .player-container.flipped {
-                transform: scale(0.48) rotate(180deg);
+                transform: scale(0.52) rotate(180deg);
             }
             
             .player-iframe {
                 border-radius: 8px;
             }
             
-            .cube-face-front  { transform: rotateY(0deg) translateZ(160px); }
-            .cube-face-back   { transform: rotateY(180deg) translateZ(160px); }
-            .cube-face-right  { transform: rotateY(90deg) translateZ(160px); }
-            .cube-face-left   { transform: rotateY(-90deg) translateZ(160px); }
-            .cube-face-top    { transform: rotateX(90deg) translateZ(160px); }
-            .cube-face-bottom { transform: rotateX(-90deg) translateZ(160px); }
+            .cube-face-front  { transform: rotateY(0deg) translateZ(170px); }
+            .cube-face-back   { transform: rotateY(180deg) translateZ(170px); }
+            .cube-face-right  { transform: rotateY(90deg) translateZ(170px); }
+            .cube-face-left   { transform: rotateY(-90deg) translateZ(170px); }
+            .cube-face-top    { transform: rotateX(90deg) translateZ(170px); }
+            .cube-face-bottom { transform: rotateX(-90deg) translateZ(170px); }
             
             .radio-text {
                 top: 20px;
@@ -218,32 +216,31 @@
             }
             
             .cube-container {
-                width: 280px;
-                height: 280px;
+                width: 300px; /* Adjusted for very small phones */
+                height: 300px;
             }
             
-            /* FIXED: Adjust scale for smaller screens */
-            /* 280px / 660px = 0.4242 scale factor */
+            /* LARGER: Wider player for small phones */
             .player-container {
-                width: 660px;
-                height: 450px;
-                transform: scale(0.42);
+                width: 650px; /* Still wider than original */
+                height: 430px; /* Adjusted height */
+                transform: scale(0.46); /* Slightly larger scale */
             }
             
             .player-container.flipped {
-                transform: scale(0.42) rotate(180deg);
+                transform: scale(0.46) rotate(180deg);
             }
             
             .player-iframe {
                 border-radius: 6px;
             }
             
-            .cube-face-front  { transform: rotateY(0deg) translateZ(140px); }
-            .cube-face-back   { transform: rotateY(180deg) translateZ(140px); }
-            .cube-face-right  { transform: rotateY(90deg) translateZ(140px); }
-            .cube-face-left   { transform: rotateY(-90deg) translateZ(140px); }
-            .cube-face-top    { transform: rotateX(90deg) translateZ(140px); }
-            .cube-face-bottom { transform: rotateX(-90deg) translateZ(140px); }
+            .cube-face-front  { transform: rotateY(0deg) translateZ(150px); }
+            .cube-face-back   { transform: rotateY(180deg) translateZ(150px); }
+            .cube-face-right  { transform: rotateY(90deg) translateZ(150px); }
+            .cube-face-left   { transform: rotateY(-90deg) translateZ(150px); }
+            .cube-face-top    { transform: rotateX(90deg) translateZ(150px); }
+            .cube-face-bottom { transform: rotateX(-90deg) translateZ(150px); }
             
             .radio-text {
                 font-size: 50px;
@@ -260,7 +257,7 @@
             }
         }
 
-        /* Landscape mobile */
+        /* Landscape mobile - LARGER PLAYER */
         @media (max-width: 900px) and (orientation: landscape) {
             .scene {
                 perspective: 700px;
@@ -268,32 +265,31 @@
             }
             
             .cube-container {
-                width: 300px;
-                height: 300px;
+                width: 320px;
+                height: 320px;
             }
             
-            /* FIXED: Scale for landscape */
-            /* 300px / 660px = 0.4545 scale factor */
+            /* LARGER: Wider player for landscape */
             .player-container {
-                width: 660px;
-                height: 450px;
-                transform: scale(0.45);
+                width: 700px; /* Wider for landscape */
+                height: 460px; /* Adjusted height */
+                transform: scale(0.48); /* Adjusted scale */
             }
             
             .player-container.flipped {
-                transform: scale(0.45) rotate(180deg);
+                transform: scale(0.48) rotate(180deg);
             }
             
             .player-iframe {
                 border-radius: 6px;
             }
             
-            .cube-face-front  { transform: rotateY(0deg) translateZ(150px); }
-            .cube-face-back   { transform: rotateY(180deg) translateZ(150px); }
-            .cube-face-right  { transform: rotateY(90deg) translateZ(150px); }
-            .cube-face-left   { transform: rotateY(-90deg) translateZ(150px); }
-            .cube-face-top    { transform: rotateX(90deg) translateZ(150px); }
-            .cube-face-bottom { transform: rotateX(-90deg) translateZ(150px); }
+            .cube-face-front  { transform: rotateY(0deg) translateZ(160px); }
+            .cube-face-back   { transform: rotateY(180deg) translateZ(160px); }
+            .cube-face-right  { transform: rotateY(90deg) translateZ(160px); }
+            .cube-face-left   { transform: rotateY(-90deg) translateZ(160px); }
+            .cube-face-top    { transform: rotateX(90deg) translateZ(160px); }
+            .cube-face-bottom { transform: rotateX(-90deg) translateZ(160px); }
             
             .radio-text {
                 top: 15px;
@@ -469,7 +465,6 @@
                 
                 // Handle window resize
                 window.addEventListener('resize', () => {
-                    // Recalculate player flip states on resize
                     this.updatePlayerFlipStates();
                 });
             }
