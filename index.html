@@ -157,7 +157,7 @@
             .cube-face-bottom { transform: rotateX(-90deg) translateZ(300px); }
         }
 
-        /* Mobile styles - PLAYER FILLS ENTIRE CUBE FACE */
+        /* Mobile styles - SIMPLER FIX */
         @media (max-width: 768px) {
             .scene {
                 align-items: center;
@@ -170,24 +170,19 @@
                 height: 320px;
             }
             
-            /* FIXED: Player container fills entire cube face on mobile */
+            /* SIMPLER FIX: Make player smaller but visible */
             .player-container {
-                width: 100%; /* Fill the entire cube face */
-                height: 100%; /* Fill the entire cube face */
-                transform: none; /* No scaling, fill the face */
-                border-radius: 0; /* Remove border radius to fill completely */
+                width: 300px;
+                height: 200px;
+                transform: scale(1);
             }
             
-            /* Remove flip rotation on mobile since we're filling entire face */
             .player-container.flipped {
-                transform: rotate(180deg); /* Only rotation, no scale */
+                transform: scale(1) rotate(180deg);
             }
             
-            /* Make iframe fill the entire container */
             .player-iframe {
-                width: 100%;
-                height: 100%;
-                border-radius: 0; /* Remove border radius to fill completely */
+                border-radius: 5px;
             }
             
             .cube-face-front  { transform: rotateY(0deg) translateZ(160px); }
@@ -213,31 +208,26 @@
             }
         }
 
-        /* Very small phones - PLAYER FILLS ENTIRE CUBE FACE */
+        /* Very small phones */
         @media (max-width: 480px) and (orientation: portrait) {
             .cube-container {
                 width: 280px;
                 height: 280px;
             }
             
-            /* FIXED: Player container fills entire cube face on small phones */
+            /* Adjust player size for small phones */
             .player-container {
-                width: 100%; /* Fill the entire cube face */
-                height: 100%; /* Fill the entire cube face */
-                transform: none; /* No scaling, fill the face */
-                border-radius: 0; /* Remove border radius to fill completely */
+                width: 260px;
+                height: 175px;
+                transform: scale(1);
             }
             
-            /* Remove flip rotation on mobile since we're filling entire face */
             .player-container.flipped {
-                transform: rotate(180deg); /* Only rotation, no scale */
+                transform: scale(1) rotate(180deg);
             }
             
-            /* Make iframe fill the entire container */
             .player-iframe {
-                width: 100%;
-                height: 100%;
-                border-radius: 0; /* Remove border radius to fill completely */
+                border-radius: 5px;
             }
             
             .cube-face-front  { transform: rotateY(0deg) translateZ(140px); }
@@ -262,7 +252,7 @@
             }
         }
 
-        /* Landscape mobile - PLAYER FILLS ENTIRE CUBE FACE */
+        /* Landscape mobile */
         @media (max-width: 900px) and (orientation: landscape) {
             .scene {
                 padding-top: 0;
@@ -273,24 +263,18 @@
                 height: 280px;
             }
             
-            /* FIXED: Player container fills entire cube face on landscape */
             .player-container {
-                width: 100%; /* Fill the entire cube face */
-                height: 100%; /* Fill the entire cube face */
-                transform: none; /* No scaling, fill the face */
-                border-radius: 0; /* Remove border radius to fill completely */
+                width: 260px;
+                height: 175px;
+                transform: scale(1);
             }
             
-            /* Remove flip rotation on mobile since we're filling entire face */
             .player-container.flipped {
-                transform: rotate(180deg); /* Only rotation, no scale */
+                transform: scale(1) rotate(180deg);
             }
             
-            /* Make iframe fill the entire container */
             .player-iframe {
-                width: 100%;
-                height: 100%;
-                border-radius: 0; /* Remove border radius to fill completely */
+                border-radius: 5px;
             }
             
             .cube-face-front  { transform: rotateY(0deg) translateZ(140px); }
@@ -471,21 +455,6 @@
                         this.rotationDirection = 1; // Reset to normal direction for user interactions
                     }
                 });
-                
-                // Handle window resize to adjust cube size for mobile
-                window.addEventListener('resize', this.handleResize.bind(this));
-            }
-            
-            handleResize() {
-                // Recalculate and update player container scale for better mobile fit
-                if (window.innerWidth <= 768) {
-                    this.adjustMobileScale();
-                }
-            }
-            
-            adjustMobileScale() {
-                // This method can be extended to dynamically adjust scale based on screen size
-                // For now, we rely on CSS media queries
             }
             
             rotateToFace(targetFace) {
