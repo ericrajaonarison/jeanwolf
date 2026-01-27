@@ -9,10 +9,6 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            user-select: none;
         }
 
         html, body {
@@ -23,9 +19,11 @@
             font-family: Helvetica, Arial, sans-serif;
             touch-action: none;
             cursor: grab;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        body:active {
+        body.dragging {
             cursor: grabbing;
         }
 
@@ -43,21 +41,20 @@
             z-index: 100;
             pointer-events: none;
             display: none;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
 
         .scene {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: 100vh;
-            perspective: 1200px;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
+            perspective: 1200px;
             transform-style: preserve-3d;
             will-change: transform;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
 
         .cube {
@@ -65,23 +62,25 @@
             width: 300px;
             height: 300px;
             transform-style: preserve-3d;
-            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.1, 1);
+            transition: transform 0.05s linear;
+            transform-origin: center center;
             pointer-events: none;
-            will-change: transform;
         }
 
         .cube-face {
             position: absolute;
             width: 100%;
             height: 100%;
-            border: 2px solid rgba(255, 0, 0, 0.3);
-            background: rgba(255, 0, 0, 0.1);
+            border: 3px solid rgba(255, 0, 0, 0.3);
+            background: rgba(255, 0, 0, 0.15);
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+            pointer-events: none;
+            box-sizing: border-box;
         }
 
         .player-wrapper {
@@ -90,8 +89,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 10px;
+            padding: 15px;
             pointer-events: auto;
+            box-sizing: border-box;
         }
 
         .player-iframe {
@@ -100,12 +100,12 @@
             max-width: 300px;
             max-height: 450px;
             border: none;
-            border-radius: 8px;
             background: transparent;
+            border-radius: 8px;
             pointer-events: auto;
         }
 
-        /* Position each face */
+        /* Cube face positions */
         .cube-face-front  { transform: rotateY(0deg) translateZ(150px); }
         .cube-face-back   { transform: rotateY(180deg) translateZ(150px); }
         .cube-face-right  { transform: rotateY(90deg) translateZ(150px); }
@@ -122,17 +122,17 @@
             text-align: center;
             color: white;
             font-size: 14px;
-            opacity: 0.7;
+            opacity: 0;
             z-index: 100;
             pointer-events: none;
-            transition: opacity 1s;
+            transition: opacity 0.5s;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
         }
 
-        /* Performance optimizations */
-        .optimize {
-            transform: translate3d(0,0,0);
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
+        .instructions.show {
+            opacity: 0.7;
         }
 
         /* Desktop styles */
@@ -162,9 +162,9 @@
         /* Mobile styles */
         @media (max-width: 768px) {
             .scene {
+                align-items: center;
+                justify-content: center;
                 padding-top: env(safe-area-inset-top);
-                align-items: flex-start;
-                padding-top: 80px;
             }
             
             .cube {
@@ -190,7 +190,7 @@
             }
         }
 
-        /* For very small phones */
+        /* Very small phones */
         @media (max-width: 480px) and (orientation: portrait) {
             .cube {
                 width: 250px;
@@ -210,32 +210,36 @@
             }
         }
 
-        /* Hide scrollbar */
-        ::-webkit-scrollbar {
-            display: none;
-        }
-        
-        /* Loading state */
+        /* Loading overlay */
         .loading {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             color: white;
             font-size: 18px;
-            opacity: 0.7;
             z-index: 1000;
+        }
+
+        /* Hide scrollbars */
+        ::-webkit-scrollbar {
             display: none;
         }
     </style>
 </head>
 <body>
     <div class="radio-text">RADIO</div>
-    <div class="loading" id="loading">Loading...</div>
+    
+    <div class="loading" id="loading">Loading Radio Cube...</div>
     
     <div class="scene" id="scene">
         <div class="cube" id="cube">
-            <!-- All faces with the same player -->
+            <!-- Face 1 - Original Radio -->
             <div class="cube-face cube-face-front">
                 <div class="player-wrapper">
                     <iframe 
@@ -243,67 +247,66 @@
                         class="player-iframe"
                         sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
                         src="https://embed.music.apple.com/de/playlist/radio/pl.u-55D6ZNlH65KbDqe?l=en"
-                        loading="lazy"
                     ></iframe>
                 </div>
             </div>
             
+            <!-- Face 2 - Radio 2 (first instance) -->
             <div class="cube-face cube-face-back">
                 <div class="player-wrapper">
                     <iframe 
                         allow="autoplay *; encrypted-media *;"
                         class="player-iframe"
                         sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-                        src="https://embed.music.apple.com/de/playlist/radio/pl.u-55D6ZNlH65KbDqe?l=en"
-                        loading="lazy"
+                        src="https://embed.music.apple.com/de/playlist/radio-2/pl.u-pMylgxvSWJVDZ9j?l=en"
                     ></iframe>
                 </div>
             </div>
             
+            <!-- Face 3 - Radio 2 (second instance) -->
             <div class="cube-face cube-face-right">
                 <div class="player-wrapper">
                     <iframe 
                         allow="autoplay *; encrypted-media *;"
                         class="player-iframe"
                         sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-                        src="https://embed.music.apple.com/de/playlist/radio/pl.u-55D6ZNlH65KbDqe?l=en"
-                        loading="lazy"
+                        src="https://embed.music.apple.com/de/playlist/radio-2/pl.u-pMylgxvSWJVDZ9j?l=en"
                     ></iframe>
                 </div>
             </div>
             
+            <!-- Face 4 - Radio 3 -->
             <div class="cube-face cube-face-left">
                 <div class="player-wrapper">
                     <iframe 
                         allow="autoplay *; encrypted-media *;"
                         class="player-iframe"
                         sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-                        src="https://embed.music.apple.com/de/playlist/radio/pl.u-55D6ZNlH65KbDqe?l=en"
-                        loading="lazy"
+                        src="https://embed.music.apple.com/de/playlist/radio-3/pl.u-zPyLl9Rue01ypmo?l=en"
                     ></iframe>
                 </div>
             </div>
             
+            <!-- Face 5 - Radio 5 -->
             <div class="cube-face cube-face-top">
                 <div class="player-wrapper">
                     <iframe 
                         allow="autoplay *; encrypted-media *;"
                         class="player-iframe"
                         sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-                        src="https://embed.music.apple.com/de/playlist/radio/pl.u-55D6ZNlH65KbDqe?l=en"
-                        loading="lazy"
+                        src="https://embed.music.apple.com/de/playlist/radio-5/pl.u-4JomaBmCJLE6Zg0?l=en"
                     ></iframe>
                 </div>
             </div>
             
+            <!-- Face 6 - Radio 6 -->
             <div class="cube-face cube-face-bottom">
                 <div class="player-wrapper">
                     <iframe 
                         allow="autoplay *; encrypted-media *;"
                         class="player-iframe"
                         sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-                        src="https://embed.music.apple.com/de/playlist/radio/pl.u-55D6ZNlH65KbDqe?l=en"
-                        loading="lazy"
+                        src="https://embed.music.apple.com/de/playlist/radio-6/pl.u-55D6Zq7I65KbDqe?l=en"
                     ></iframe>
                 </div>
             </div>
@@ -315,341 +318,323 @@
     </div>
 
     <script>
-        (function() {
-            'use strict';
+        class RadioCube {
+            constructor() {
+                this.scene = document.getElementById('scene');
+                this.cube = document.getElementById('cube');
+                this.body = document.body;
+                this.loading = document.getElementById('loading');
+                this.instructions = document.getElementById('instructions');
+                
+                this.rotation = { x: 20, y: 20 };
+                this.scale = 1;
+                this.isDragging = false;
+                this.startX = 0;
+                this.startY = 0;
+                this.lastX = 0;
+                this.lastY = 0;
+                this.velocity = { x: 0, y: 0 };
+                this.lastTime = 0;
+                this.autoRotate = true;
+                this.hasInteracted = false;
+                this.inertiaId = null;
+                
+                // Physical properties for heavier feel
+                this.rotationSensitivity = 0.35;
+                this.inertiaDecay = 0.85;
+                this.minVelocity = 0.001;
+                this.maxVelocity = 1.5;
+                
+                this.minScale = 0.5;
+                this.maxScale = 2;
+                
+                this.init();
+            }
             
-            // Get elements
-            const cube = document.getElementById('cube');
-            const scene = document.getElementById('scene');
-            const instructions = document.getElementById('instructions');
-            const loading = document.getElementById('loading');
-            const iframes = document.querySelectorAll('iframe');
-            
-            // State variables
-            let rotation = { x: 20, y: 20 };
-            let scale = 1;
-            let isDragging = false;
-            let lastX = 0;
-            let lastY = 0;
-            let velocity = { x: 0, y: 0 };
-            let lastTime = 0;
-            let autoRotate = true;
-            let hasInteracted = false;
-            let inertiaId = null;
-            const minScale = 0.5;
-            const maxScale = 2;
-            
-            // Physics constants
-            const ROTATION_SENSITIVITY = 0.3;
-            const INERTIA_DECAY = 0.95;
-            const MIN_VELOCITY = 0.01;
-            
-            // Initialize
-            function init() {
-                loading.style.display = 'block';
+            init() {
+                // Initial rotation
+                this.updateCubeTransform();
                 
-                // Apply initial rotation
-                updateCubeTransform();
+                // Setup event listeners - entire body is draggable
+                this.setupEventListeners();
                 
-                // Add performance class
-                cube.classList.add('optimize');
+                // Start auto-rotation
+                this.startAutoRotate();
                 
-                // Setup event listeners
-                setupEventListeners();
-                
-                // Start animation loop
-                requestAnimationFrame(animate);
-                
-                // Hide loading after a moment
+                // Hide loading after short delay
                 setTimeout(() => {
-                    loading.style.display = 'none';
+                    this.loading.style.opacity = '0';
+                    setTimeout(() => {
+                        this.loading.style.display = 'none';
+                        // Show instructions briefly
+                        this.instructions.classList.add('show');
+                        setTimeout(() => {
+                            this.instructions.classList.remove('show');
+                        }, 3000);
+                    }, 500);
                 }, 1000);
             }
             
-            // Setup event listeners
-            function setupEventListeners() {
-                // Mouse events for desktop
-                document.addEventListener('mousedown', handleMouseDown);
-                document.addEventListener('mousemove', handleMouseMove);
-                document.addEventListener('mouseup', handleMouseUp);
-                document.addEventListener('mouseleave', handleMouseUp);
+            setupEventListeners() {
+                // Mouse events
+                this.body.addEventListener('mousedown', this.handleMouseDown.bind(this));
+                document.addEventListener('mousemove', this.handleMouseMove.bind(this));
+                document.addEventListener('mouseup', this.handleMouseUp.bind(this));
                 
-                // Touch events for mobile
-                document.addEventListener('touchstart', handleTouchStart, { passive: false });
-                document.addEventListener('touchmove', handleTouchMove, { passive: false });
-                document.addEventListener('touchend', handleTouchEnd);
+                // Touch events with passive: false for better control
+                this.body.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
+                document.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
+                document.addEventListener('touchend', this.handleTouchEnd.bind(this));
                 
                 // Wheel for zoom
-                document.addEventListener('wheel', handleWheel, { passive: false });
+                this.scene.addEventListener('wheel', this.handleWheel.bind(this), { passive: false });
                 
-                // Prevent context menu
-                document.addEventListener('contextmenu', (e) => e.preventDefault());
+                // Double click to reset
+                this.body.addEventListener('dblclick', this.resetView.bind(this));
                 
-                // Handle iframe loading
-                iframes.forEach(iframe => {
-                    iframe.addEventListener('load', () => {
-                        console.log('Iframe loaded');
-                    });
+                // Double tap for mobile
+                let lastTap = 0;
+                this.body.addEventListener('touchstart', (e) => {
+                    const currentTime = new Date().getTime();
+                    if (currentTime - lastTap < 300) {
+                        this.resetView();
+                        e.preventDefault();
+                    }
+                    lastTap = currentTime;
+                });
+                
+                // Handle window resize
+                window.addEventListener('resize', this.handleResize.bind(this));
+                
+                // Clean up on page unload
+                window.addEventListener('beforeunload', () => {
+                    if (this.inertiaId) {
+                        cancelAnimationFrame(this.inertiaId);
+                    }
                 });
             }
             
-            // Mouse handlers
-            function handleMouseDown(e) {
-                if (e.button !== 0) return; // Only left click
+            handleMouseDown(e) {
+                // Don't start drag on right click
+                if (e.button !== 0) return;
                 
-                stopAutoRotate();
-                isDragging = true;
-                lastX = e.clientX;
-                lastY = e.clientY;
-                velocity = { x: 0, y: 0 };
-                lastTime = Date.now();
+                this.stopAutoRotate();
+                this.isDragging = true;
+                this.startX = e.clientX;
+                this.startY = e.clientY;
+                this.lastX = e.clientX;
+                this.lastY = e.clientY;
+                this.lastTime = Date.now();
+                this.velocity = { x: 0, y: 0 };
                 
-                document.body.style.cursor = 'grabbing';
+                this.body.classList.add('dragging');
+                
+                // Clear any existing inertia
+                if (this.inertiaId) {
+                    cancelAnimationFrame(this.inertiaId);
+                    this.inertiaId = null;
+                }
             }
             
-            function handleMouseMove(e) {
-                if (!isDragging) return;
+            handleMouseMove(e) {
+                if (!this.isDragging) return;
                 
                 const currentTime = Date.now();
-                const deltaTime = currentTime - lastTime;
+                const deltaTime = currentTime - this.lastTime;
                 
-                if (deltaTime > 0) {
-                    const deltaX = e.clientX - lastX;
-                    const deltaY = e.clientY - lastY;
-                    
-                    // Calculate velocity for inertia
-                    velocity.x = deltaX / deltaTime;
-                    velocity.y = deltaY / deltaTime;
-                    
-                    // Update rotation
-                    rotation.y += deltaX * ROTATION_SENSITIVITY;
-                    rotation.x -= deltaY * ROTATION_SENSITIVITY;
-                    
-                    updateCubeTransform();
-                    
-                    lastX = e.clientX;
-                    lastY = e.clientY;
-                    lastTime = currentTime;
-                    hasInteracted = true;
+                // Calculate movement
+                const deltaX = e.clientX - this.lastX;
+                const deltaY = e.clientY - this.lastY;
+                
+                // Update velocity (clamped for heavier feel)
+                this.velocity.x = Math.max(-this.maxVelocity, Math.min(this.maxVelocity, deltaX / deltaTime));
+                this.velocity.y = Math.max(-this.maxVelocity, Math.min(this.maxVelocity, deltaY / deltaTime));
+                
+                // Apply rotation with heavier feel
+                this.rotation.y += deltaX * this.rotationSensitivity;
+                this.rotation.x -= deltaY * this.rotationSensitivity;
+                
+                this.updateCubeTransform();
+                
+                this.lastX = e.clientX;
+                this.lastY = e.clientY;
+                this.lastTime = currentTime;
+                this.hasInteracted = true;
+            }
+            
+            handleMouseUp() {
+                if (!this.isDragging) return;
+                
+                this.isDragging = false;
+                this.body.classList.remove('dragging');
+                
+                // Apply inertia if there's enough velocity
+                if (Math.abs(this.velocity.x) > this.minVelocity || 
+                    Math.abs(this.velocity.y) > this.minVelocity) {
+                    this.applyInertia();
                 }
             }
             
-            function handleMouseUp() {
-                if (!isDragging) return;
+            handleTouchStart(e) {
+                if (e.touches.length !== 1) return;
                 
-                isDragging = false;
-                document.body.style.cursor = 'grab';
+                this.stopAutoRotate();
+                this.isDragging = true;
+                this.startX = e.touches[0].clientX;
+                this.startY = e.touches[0].clientY;
+                this.lastX = e.touches[0].clientX;
+                this.lastY = e.touches[0].clientY;
+                this.lastTime = Date.now();
+                this.velocity = { x: 0, y: 0 };
                 
-                // Start inertia if there's enough velocity
-                if (Math.abs(velocity.x) > MIN_VELOCITY || Math.abs(velocity.y) > MIN_VELOCITY) {
-                    startInertia();
-                }
-            }
-            
-            // Touch handlers
-            function handleTouchStart(e) {
-                if (e.touches.length === 1) {
-                    stopAutoRotate();
-                    isDragging = true;
-                    lastX = e.touches[0].clientX;
-                    lastY = e.touches[0].clientY;
-                    velocity = { x: 0, y: 0 };
-                    lastTime = Date.now();
-                    e.preventDefault();
-                } else if (e.touches.length === 2) {
-                    // Handle pinch zoom
-                    e.preventDefault();
-                }
-            }
-            
-            function handleTouchMove(e) {
-                if (!isDragging || e.touches.length !== 1) return;
-                
-                const currentTime = Date.now();
-                const deltaTime = currentTime - lastTime;
-                
-                if (deltaTime > 0) {
-                    const deltaX = e.touches[0].clientX - lastX;
-                    const deltaY = e.touches[0].clientY - lastY;
-                    
-                    // Calculate velocity for inertia
-                    velocity.x = deltaX / deltaTime;
-                    velocity.y = deltaY / deltaTime;
-                    
-                    // Update rotation
-                    rotation.y += deltaX * ROTATION_SENSITIVITY;
-                    rotation.x -= deltaY * ROTATION_SENSITIVITY;
-                    
-                    updateCubeTransform();
-                    
-                    lastX = e.touches[0].clientX;
-                    lastY = e.touches[0].clientY;
-                    lastTime = currentTime;
-                    hasInteracted = true;
+                // Clear any existing inertia
+                if (this.inertiaId) {
+                    cancelAnimationFrame(this.inertiaId);
+                    this.inertiaId = null;
                 }
                 
                 e.preventDefault();
             }
             
-            function handleTouchEnd() {
-                if (!isDragging) return;
+            handleTouchMove(e) {
+                if (!this.isDragging || e.touches.length !== 1) return;
                 
-                isDragging = false;
+                const currentTime = Date.now();
+                const deltaTime = currentTime - this.lastTime;
                 
-                // Start inertia if there's enough velocity
-                if (Math.abs(velocity.x) > MIN_VELOCITY || Math.abs(velocity.y) > MIN_VELOCITY) {
-                    startInertia();
+                // Calculate movement
+                const deltaX = e.touches[0].clientX - this.lastX;
+                const deltaY = e.touches[0].clientY - this.lastY;
+                
+                // Update velocity (clamped for heavier feel)
+                this.velocity.x = Math.max(-this.maxVelocity, Math.min(this.maxVelocity, deltaX / deltaTime));
+                this.velocity.y = Math.max(-this.maxVelocity, Math.min(this.maxVelocity, deltaY / deltaTime));
+                
+                // Apply rotation (slightly more sensitive on mobile)
+                this.rotation.y += deltaX * this.rotationSensitivity * 1.2;
+                this.rotation.x -= deltaY * this.rotationSensitivity * 1.2;
+                
+                this.updateCubeTransform();
+                
+                this.lastX = e.touches[0].clientX;
+                this.lastY = e.touches[0].clientY;
+                this.lastTime = currentTime;
+                this.hasInteracted = true;
+                
+                e.preventDefault();
+            }
+            
+            handleTouchEnd(e) {
+                if (!this.isDragging) return;
+                
+                this.isDragging = false;
+                
+                // Apply inertia if there's enough velocity
+                if (Math.abs(this.velocity.x) > this.minVelocity || 
+                    Math.abs(this.velocity.y) > this.minVelocity) {
+                    this.applyInertia();
                 }
             }
             
-            // Wheel handler for zoom
-            function handleWheel(e) {
-                stopAutoRotate();
+            handleWheel(e) {
+                this.stopAutoRotate();
                 
                 const zoomIntensity = 0.001;
                 const delta = e.deltaY * zoomIntensity;
                 
-                scale = Math.max(minScale, Math.min(maxScale, scale - delta));
-                updateCubeTransform();
+                this.scale = Math.max(this.minScale, Math.min(this.maxScale, this.scale - delta));
+                this.updateCubeTransform();
                 
                 e.preventDefault();
-                hasInteracted = true;
+                this.hasInteracted = true;
             }
             
-            // Inertia animation
-            function startInertia() {
-                if (inertiaId) {
-                    cancelAnimationFrame(inertiaId);
-                }
-                
-                function applyInertia() {
-                    if (Math.abs(velocity.x) < MIN_VELOCITY && Math.abs(velocity.y) < MIN_VELOCITY) {
-                        velocity.x = 0;
-                        velocity.y = 0;
+            handleResize() {
+                // Keep cube centered
+                this.updateCubeTransform();
+            }
+            
+            applyInertia() {
+                const animateInertia = () => {
+                    // Stop if velocity is too low
+                    if (Math.abs(this.velocity.x) < this.minVelocity && 
+                        Math.abs(this.velocity.y) < this.minVelocity) {
+                        this.velocity = { x: 0, y: 0 };
+                        this.inertiaId = null;
                         return;
                     }
                     
-                    // Apply velocity
-                    rotation.y += velocity.x * 16; // 16ms frame time
-                    rotation.x -= velocity.y * 16;
+                    // Apply velocity with frame time consideration
+                    const frameTime = 16; // Approximate 60fps
+                    this.rotation.y += this.velocity.x * frameTime * this.rotationSensitivity;
+                    this.rotation.x -= this.velocity.y * frameTime * this.rotationSensitivity;
                     
                     // Decay velocity
-                    velocity.x *= INERTIA_DECAY;
-                    velocity.y *= INERTIA_DECAY;
+                    this.velocity.x *= this.inertiaDecay;
+                    this.velocity.y *= this.inertiaDecay;
                     
-                    updateCubeTransform();
+                    this.updateCubeTransform();
                     
-                    inertiaId = requestAnimationFrame(applyInertia);
-                }
+                    this.inertiaId = requestAnimationFrame(animateInertia);
+                };
                 
-                inertiaId = requestAnimationFrame(applyInertia);
+                this.inertiaId = requestAnimationFrame(animateInertia);
             }
             
-            // Update cube transform
-            function updateCubeTransform() {
+            updateCubeTransform() {
                 // Normalize rotation
-                rotation.x = rotation.x % 360;
-                rotation.y = rotation.y % 360;
+                this.rotation.x = this.rotation.x % 360;
+                this.rotation.y = this.rotation.y % 360;
                 
-                cube.style.transform = `
-                    rotateX(${rotation.x}deg) 
-                    rotateY(${rotation.y}deg) 
-                    scale(${scale})
+                // Use transform3d for GPU acceleration
+                this.cube.style.transform = `
+                    rotate3d(1, 0, 0, ${this.rotation.x}deg) 
+                    rotate3d(0, 1, 0, ${this.rotation.y}deg) 
+                    scale3d(${this.scale}, ${this.scale}, ${this.scale})
                 `;
             }
             
-            // Auto rotation
-            function autoRotateCube() {
-                if (!autoRotate || isDragging) return;
-                
-                rotation.y += 0.3;
-                updateCubeTransform();
-            }
-            
-            function stopAutoRotate() {
-                autoRotate = false;
-            }
-            
-            // Main animation loop
-            function animate(time) {
-                autoRotateCube();
-                requestAnimationFrame(animate);
-            }
-            
-            // Double click/tap to reset
-            document.addEventListener('dblclick', () => {
-                rotation = { x: 20, y: 20 };
-                scale = 1;
-                updateCubeTransform();
-                stopAutoRotate();
-                hasInteracted = true;
-            });
-            
-            // Double tap for mobile
-            let lastTap = 0;
-            document.addEventListener('touchstart', (e) => {
-                const currentTime = new Date().getTime();
-                const tapLength = currentTime - lastTap;
-                
-                if (tapLength < 300 && tapLength > 0) {
-                    // Double tap detected
-                    rotation = { x: 20, y: 20 };
-                    scale = 1;
-                    updateCubeTransform();
-                    stopAutoRotate();
-                    hasInteracted = true;
-                    e.preventDefault();
-                }
-                
-                lastTap = currentTime;
-            });
-            
-            // Hide instructions after interaction
-            function hideInstructions() {
-                if (hasInteracted) {
-                    instructions.style.opacity = '0';
-                    instructions.style.pointerEvents = 'none';
+            startAutoRotate() {
+                if (this.autoRotate && !this.hasInteracted && !this.isDragging) {
+                    this.rotation.y += 0.15;
+                    this.updateCubeTransform();
+                    requestAnimationFrame(() => this.startAutoRotate());
                 }
             }
             
-            // Auto-hide instructions after 5 seconds
+            stopAutoRotate() {
+                this.autoRotate = false;
+                this.hasInteracted = true;
+            }
+            
+            resetView() {
+                this.rotation = { x: 20, y: 20 };
+                this.scale = 1;
+                this.updateCubeTransform();
+                this.stopAutoRotate();
+                
+                // Show instructions briefly
+                this.instructions.classList.add('show');
+                setTimeout(() => {
+                    this.instructions.classList.remove('show');
+                }, 2000);
+            }
+        }
+        
+        // Initialize when page is fully loaded
+        window.addEventListener('load', () => {
+            // Use setTimeout to ensure DOM is ready
             setTimeout(() => {
-                instructions.style.transition = 'opacity 1s';
-                instructions.style.opacity = '0';
-            }, 5000);
-            
-            // Show instructions on hover
-            document.addEventListener('mousemove', () => {
-                if (!hasInteracted) {
-                    instructions.style.opacity = '0.7';
-                    setTimeout(() => {
-                        if (!hasInteracted) {
-                            instructions.style.opacity = '0';
-                        }
-                    }, 2000);
-                }
-            });
-            
-            // Handle window resize
-            window.addEventListener('resize', () => {
-                updateCubeTransform();
-            });
-            
-            // Initialize
-            window.addEventListener('load', init);
-            
-            // Prevent iframe from stealing mouse events
-            iframes.forEach(iframe => {
-                iframe.addEventListener('mouseenter', () => {
-                    document.body.style.cursor = 'default';
-                });
-                
-                iframe.addEventListener('mouseleave', () => {
-                    document.body.style.cursor = isDragging ? 'grabbing' : 'grab';
-                });
-            });
-            
-        })();
+                window.radioCube = new RadioCube();
+            }, 100);
+        });
+        
+        // Handle visibility change to prevent auto-rotate when tab is hidden
+        document.addEventListener('visibilitychange', () => {
+            if (window.radioCube && document.hidden) {
+                window.radioCube.autoRotate = false;
+            }
+        });
     </script>
 </body>
 </html>
