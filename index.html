@@ -1,103 +1,655 @@
-<style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-  }
-  
-  .radio-text {
-    position: absolute;
-    top: 40px;
-    left: 40px;
-    font-family: Helvetica, Arial, sans-serif;
-    font-weight: 900;
-    font-size: 80px;
-    color: #000;
-    letter-spacing: -2px;
-    line-height: 1;
-    opacity: 0.95;
-    z-index: 10;
-    pointer-events: none;
-    display: none;
-  }
-  
-  .music-player-container {
-    width: 100%;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: transparent;
-    position: relative;
-  }
-  
-  .music-player-wrapper {
-    width: 100%;
-    height: 100%;
-    max-width: 660px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .music-player-iframe {
-    width: 100%;
-    height: 100%;
-    max-height: 450px;
-    border: none;
-    background: transparent;
-  }
-  
-  /* Desktop */
-  @media (min-width: 769px) {
-    .radio-text {
-      display: block;
-    }
-    
-    .music-player-wrapper {
-      height: 450px;
-      padding: 20px;
-    }
-  }
-  
-  /* Mobile */
-  @media (max-width: 768px) {
-    .music-player-container {
-      align-items: flex-start;
-      padding-top: env(safe-area-inset-top);
-    }
-    
-    .music-player-wrapper {
-      max-width: 100%;
-      height: calc(100vh - env(safe-area-inset-top));
-    }
-    
-    .music-player-iframe {
-      max-height: none;
-    }
-  }
-  
-  /* Adjust for very wide screens */
-  @media (min-width: 1400px) {
-    .radio-text {
-      font-size: 100px;
-      top: 50px;
-      left: 50px;
-    }
-  }
-</style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio Cube</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
+        }
 
-<div class="music-player-container">
-  <div class="radio-text">RADIO</div>
-  
-  <div class="music-player-wrapper">
-    <iframe 
-      allow="autoplay *; encrypted-media *;"
-      class="music-player-iframe"
-      sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-      src="https://embed.music.apple.com/de/playlist/radio/pl.u-55D6ZNlH65KbDqe?l=en"
-    >
-    </iframe>
-  </div>
-</div>
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            font-family: Helvetica, Arial, sans-serif;
+            touch-action: none;
+            cursor: grab;
+        }
+
+        body:active {
+            cursor: grabbing;
+        }
+
+        .radio-text {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 900;
+            font-size: 80px;
+            color: #fff;
+            letter-spacing: -2px;
+            line-height: 1;
+            opacity: 0.95;
+            z-index: 100;
+            pointer-events: none;
+            display: none;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .scene {
+            width: 100%;
+            height: 100vh;
+            perspective: 1200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            will-change: transform;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .cube {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            transform-style: preserve-3d;
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.1, 1);
+            pointer-events: none;
+            will-change: transform;
+        }
+
+        .cube-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(255, 0, 0, 0.3);
+            background: rgba(255, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .player-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            pointer-events: auto;
+        }
+
+        .player-iframe {
+            width: 100%;
+            height: 100%;
+            max-width: 300px;
+            max-height: 450px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            pointer-events: auto;
+        }
+
+        /* Position each face */
+        .cube-face-front  { transform: rotateY(0deg) translateZ(150px); }
+        .cube-face-back   { transform: rotateY(180deg) translateZ(150px); }
+        .cube-face-right  { transform: rotateY(90deg) translateZ(150px); }
+        .cube-face-left   { transform: rotateY(-90deg) translateZ(150px); }
+        .cube-face-top    { transform: rotateX(90deg) translateZ(150px); }
+        .cube-face-bottom { transform: rotateX(-90deg) translateZ(150px); }
+
+        /* Instructions */
+        .instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            font-size: 14px;
+            opacity: 0.7;
+            z-index: 100;
+            pointer-events: none;
+            transition: opacity 1s;
+        }
+
+        /* Performance optimizations */
+        .optimize {
+            transform: translate3d(0,0,0);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        /* Desktop styles */
+        @media (min-width: 769px) {
+            .radio-text {
+                display: block;
+            }
+            
+            .cube {
+                width: 400px;
+                height: 400px;
+            }
+            
+            .cube-face-front  { transform: rotateY(0deg) translateZ(200px); }
+            .cube-face-back   { transform: rotateY(180deg) translateZ(200px); }
+            .cube-face-right  { transform: rotateY(90deg) translateZ(200px); }
+            .cube-face-left   { transform: rotateY(-90deg) translateZ(200px); }
+            .cube-face-top    { transform: rotateX(90deg) translateZ(200px); }
+            .cube-face-bottom { transform: rotateX(-90deg) translateZ(200px); }
+            
+            .player-iframe {
+                max-width: 350px;
+                max-height: 500px;
+            }
+        }
+
+        /* Mobile styles */
+        @media (max-width: 768px) {
+            .scene {
+                padding-top: env(safe-area-inset-top);
+                align-items: flex-start;
+                padding-top: 80px;
+            }
+            
+            .cube {
+                width: 280px;
+                height: 280px;
+            }
+            
+            .cube-face-front  { transform: rotateY(0deg) translateZ(140px); }
+            .cube-face-back   { transform: rotateY(180deg) translateZ(140px); }
+            .cube-face-right  { transform: rotateY(90deg) translateZ(140px); }
+            .cube-face-left   { transform: rotateY(-90deg) translateZ(140px); }
+            .cube-face-top    { transform: rotateX(90deg) translateZ(140px); }
+            .cube-face-bottom { transform: rotateX(-90deg) translateZ(140px); }
+            
+            .player-iframe {
+                max-width: 260px;
+                max-height: 400px;
+            }
+            
+            .instructions {
+                bottom: 60px;
+                font-size: 12px;
+            }
+        }
+
+        /* For very small phones */
+        @media (max-width: 480px) and (orientation: portrait) {
+            .cube {
+                width: 250px;
+                height: 250px;
+            }
+            
+            .cube-face-front  { transform: rotateY(0deg) translateZ(125px); }
+            .cube-face-back   { transform: rotateY(180deg) translateZ(125px); }
+            .cube-face-right  { transform: rotateY(90deg) translateZ(125px); }
+            .cube-face-left   { transform: rotateY(-90deg) translateZ(125px); }
+            .cube-face-top    { transform: rotateX(90deg) translateZ(125px); }
+            .cube-face-bottom { transform: rotateX(-90deg) translateZ(125px); }
+            
+            .player-iframe {
+                max-width: 230px;
+                max-height: 350px;
+            }
+        }
+
+        /* Hide scrollbar */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        
+        /* Loading state */
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            opacity: 0.7;
+            z-index: 1000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="radio-text">RADIO</div>
+    <div class="loading" id="loading">Loading...</div>
+    
+    <div class="scene" id="scene">
+        <div class="cube" id="cube">
+            <!-- All faces with the same player -->
+            <div class="cube-face cube-face-front">
+                <div class="player-wrapper">
+                    <iframe 
+                        allow="autoplay *; encrypted-media *;"
+                        class="player-iframe"
+                        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+                        src="https://embed.music.apple.com/de/playlist/radio/pl.u-55D6ZNlH65KbDqe?l=en"
+                        loading="lazy"
+                    ></iframe>
+                </div>
+            </div>
+            
+            <div class="cube-face cube-face-back">
+                <div class="player-wrapper">
+                    <iframe 
+                        allow="autoplay *; encrypted-media *;"
+                        class="player-iframe"
+                        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+                        src="https://embed.music.apple.com/de/playlist/radio/pl.u-55D6ZNlH65KbDqe?l=en"
+                        loading="lazy"
+                    ></iframe>
+                </div>
+            </div>
+            
+            <div class="cube-face cube-face-right">
+                <div class="player-wrapper">
+                    <iframe 
+                        allow="autoplay *; encrypted-media *;"
+                        class="player-iframe"
+                        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+                        src="https://embed.music.apple.com/de/playlist/radio/pl.u-55D6ZNlH65KbDqe?l=en"
+                        loading="lazy"
+                    ></iframe>
+                </div>
+            </div>
+            
+            <div class="cube-face cube-face-left">
+                <div class="player-wrapper">
+                    <iframe 
+                        allow="autoplay *; encrypted-media *;"
+                        class="player-iframe"
+                        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+                        src="https://embed.music.apple.com/de/playlist/radio/pl.u-55D6ZNlH65KbDqe?l=en"
+                        loading="lazy"
+                    ></iframe>
+                </div>
+            </div>
+            
+            <div class="cube-face cube-face-top">
+                <div class="player-wrapper">
+                    <iframe 
+                        allow="autoplay *; encrypted-media *;"
+                        class="player-iframe"
+                        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+                        src="https://embed.music.apple.com/de/playlist/radio/pl.u-55D6ZNlH65KbDqe?l=en"
+                        loading="lazy"
+                    ></iframe>
+                </div>
+            </div>
+            
+            <div class="cube-face cube-face-bottom">
+                <div class="player-wrapper">
+                    <iframe 
+                        allow="autoplay *; encrypted-media *;"
+                        class="player-iframe"
+                        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+                        src="https://embed.music.apple.com/de/playlist/radio/pl.u-55D6ZNlH65KbDqe?l=en"
+                        loading="lazy"
+                    ></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="instructions" id="instructions">
+        Drag anywhere to rotate • Scroll to zoom • Click player to control music
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            
+            // Get elements
+            const cube = document.getElementById('cube');
+            const scene = document.getElementById('scene');
+            const instructions = document.getElementById('instructions');
+            const loading = document.getElementById('loading');
+            const iframes = document.querySelectorAll('iframe');
+            
+            // State variables
+            let rotation = { x: 20, y: 20 };
+            let scale = 1;
+            let isDragging = false;
+            let lastX = 0;
+            let lastY = 0;
+            let velocity = { x: 0, y: 0 };
+            let lastTime = 0;
+            let autoRotate = true;
+            let hasInteracted = false;
+            let inertiaId = null;
+            const minScale = 0.5;
+            const maxScale = 2;
+            
+            // Physics constants
+            const ROTATION_SENSITIVITY = 0.3;
+            const INERTIA_DECAY = 0.95;
+            const MIN_VELOCITY = 0.01;
+            
+            // Initialize
+            function init() {
+                loading.style.display = 'block';
+                
+                // Apply initial rotation
+                updateCubeTransform();
+                
+                // Add performance class
+                cube.classList.add('optimize');
+                
+                // Setup event listeners
+                setupEventListeners();
+                
+                // Start animation loop
+                requestAnimationFrame(animate);
+                
+                // Hide loading after a moment
+                setTimeout(() => {
+                    loading.style.display = 'none';
+                }, 1000);
+            }
+            
+            // Setup event listeners
+            function setupEventListeners() {
+                // Mouse events for desktop
+                document.addEventListener('mousedown', handleMouseDown);
+                document.addEventListener('mousemove', handleMouseMove);
+                document.addEventListener('mouseup', handleMouseUp);
+                document.addEventListener('mouseleave', handleMouseUp);
+                
+                // Touch events for mobile
+                document.addEventListener('touchstart', handleTouchStart, { passive: false });
+                document.addEventListener('touchmove', handleTouchMove, { passive: false });
+                document.addEventListener('touchend', handleTouchEnd);
+                
+                // Wheel for zoom
+                document.addEventListener('wheel', handleWheel, { passive: false });
+                
+                // Prevent context menu
+                document.addEventListener('contextmenu', (e) => e.preventDefault());
+                
+                // Handle iframe loading
+                iframes.forEach(iframe => {
+                    iframe.addEventListener('load', () => {
+                        console.log('Iframe loaded');
+                    });
+                });
+            }
+            
+            // Mouse handlers
+            function handleMouseDown(e) {
+                if (e.button !== 0) return; // Only left click
+                
+                stopAutoRotate();
+                isDragging = true;
+                lastX = e.clientX;
+                lastY = e.clientY;
+                velocity = { x: 0, y: 0 };
+                lastTime = Date.now();
+                
+                document.body.style.cursor = 'grabbing';
+            }
+            
+            function handleMouseMove(e) {
+                if (!isDragging) return;
+                
+                const currentTime = Date.now();
+                const deltaTime = currentTime - lastTime;
+                
+                if (deltaTime > 0) {
+                    const deltaX = e.clientX - lastX;
+                    const deltaY = e.clientY - lastY;
+                    
+                    // Calculate velocity for inertia
+                    velocity.x = deltaX / deltaTime;
+                    velocity.y = deltaY / deltaTime;
+                    
+                    // Update rotation
+                    rotation.y += deltaX * ROTATION_SENSITIVITY;
+                    rotation.x -= deltaY * ROTATION_SENSITIVITY;
+                    
+                    updateCubeTransform();
+                    
+                    lastX = e.clientX;
+                    lastY = e.clientY;
+                    lastTime = currentTime;
+                    hasInteracted = true;
+                }
+            }
+            
+            function handleMouseUp() {
+                if (!isDragging) return;
+                
+                isDragging = false;
+                document.body.style.cursor = 'grab';
+                
+                // Start inertia if there's enough velocity
+                if (Math.abs(velocity.x) > MIN_VELOCITY || Math.abs(velocity.y) > MIN_VELOCITY) {
+                    startInertia();
+                }
+            }
+            
+            // Touch handlers
+            function handleTouchStart(e) {
+                if (e.touches.length === 1) {
+                    stopAutoRotate();
+                    isDragging = true;
+                    lastX = e.touches[0].clientX;
+                    lastY = e.touches[0].clientY;
+                    velocity = { x: 0, y: 0 };
+                    lastTime = Date.now();
+                    e.preventDefault();
+                } else if (e.touches.length === 2) {
+                    // Handle pinch zoom
+                    e.preventDefault();
+                }
+            }
+            
+            function handleTouchMove(e) {
+                if (!isDragging || e.touches.length !== 1) return;
+                
+                const currentTime = Date.now();
+                const deltaTime = currentTime - lastTime;
+                
+                if (deltaTime > 0) {
+                    const deltaX = e.touches[0].clientX - lastX;
+                    const deltaY = e.touches[0].clientY - lastY;
+                    
+                    // Calculate velocity for inertia
+                    velocity.x = deltaX / deltaTime;
+                    velocity.y = deltaY / deltaTime;
+                    
+                    // Update rotation
+                    rotation.y += deltaX * ROTATION_SENSITIVITY;
+                    rotation.x -= deltaY * ROTATION_SENSITIVITY;
+                    
+                    updateCubeTransform();
+                    
+                    lastX = e.touches[0].clientX;
+                    lastY = e.touches[0].clientY;
+                    lastTime = currentTime;
+                    hasInteracted = true;
+                }
+                
+                e.preventDefault();
+            }
+            
+            function handleTouchEnd() {
+                if (!isDragging) return;
+                
+                isDragging = false;
+                
+                // Start inertia if there's enough velocity
+                if (Math.abs(velocity.x) > MIN_VELOCITY || Math.abs(velocity.y) > MIN_VELOCITY) {
+                    startInertia();
+                }
+            }
+            
+            // Wheel handler for zoom
+            function handleWheel(e) {
+                stopAutoRotate();
+                
+                const zoomIntensity = 0.001;
+                const delta = e.deltaY * zoomIntensity;
+                
+                scale = Math.max(minScale, Math.min(maxScale, scale - delta));
+                updateCubeTransform();
+                
+                e.preventDefault();
+                hasInteracted = true;
+            }
+            
+            // Inertia animation
+            function startInertia() {
+                if (inertiaId) {
+                    cancelAnimationFrame(inertiaId);
+                }
+                
+                function applyInertia() {
+                    if (Math.abs(velocity.x) < MIN_VELOCITY && Math.abs(velocity.y) < MIN_VELOCITY) {
+                        velocity.x = 0;
+                        velocity.y = 0;
+                        return;
+                    }
+                    
+                    // Apply velocity
+                    rotation.y += velocity.x * 16; // 16ms frame time
+                    rotation.x -= velocity.y * 16;
+                    
+                    // Decay velocity
+                    velocity.x *= INERTIA_DECAY;
+                    velocity.y *= INERTIA_DECAY;
+                    
+                    updateCubeTransform();
+                    
+                    inertiaId = requestAnimationFrame(applyInertia);
+                }
+                
+                inertiaId = requestAnimationFrame(applyInertia);
+            }
+            
+            // Update cube transform
+            function updateCubeTransform() {
+                // Normalize rotation
+                rotation.x = rotation.x % 360;
+                rotation.y = rotation.y % 360;
+                
+                cube.style.transform = `
+                    rotateX(${rotation.x}deg) 
+                    rotateY(${rotation.y}deg) 
+                    scale(${scale})
+                `;
+            }
+            
+            // Auto rotation
+            function autoRotateCube() {
+                if (!autoRotate || isDragging) return;
+                
+                rotation.y += 0.3;
+                updateCubeTransform();
+            }
+            
+            function stopAutoRotate() {
+                autoRotate = false;
+            }
+            
+            // Main animation loop
+            function animate(time) {
+                autoRotateCube();
+                requestAnimationFrame(animate);
+            }
+            
+            // Double click/tap to reset
+            document.addEventListener('dblclick', () => {
+                rotation = { x: 20, y: 20 };
+                scale = 1;
+                updateCubeTransform();
+                stopAutoRotate();
+                hasInteracted = true;
+            });
+            
+            // Double tap for mobile
+            let lastTap = 0;
+            document.addEventListener('touchstart', (e) => {
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTap;
+                
+                if (tapLength < 300 && tapLength > 0) {
+                    // Double tap detected
+                    rotation = { x: 20, y: 20 };
+                    scale = 1;
+                    updateCubeTransform();
+                    stopAutoRotate();
+                    hasInteracted = true;
+                    e.preventDefault();
+                }
+                
+                lastTap = currentTime;
+            });
+            
+            // Hide instructions after interaction
+            function hideInstructions() {
+                if (hasInteracted) {
+                    instructions.style.opacity = '0';
+                    instructions.style.pointerEvents = 'none';
+                }
+            }
+            
+            // Auto-hide instructions after 5 seconds
+            setTimeout(() => {
+                instructions.style.transition = 'opacity 1s';
+                instructions.style.opacity = '0';
+            }, 5000);
+            
+            // Show instructions on hover
+            document.addEventListener('mousemove', () => {
+                if (!hasInteracted) {
+                    instructions.style.opacity = '0.7';
+                    setTimeout(() => {
+                        if (!hasInteracted) {
+                            instructions.style.opacity = '0';
+                        }
+                    }, 2000);
+                }
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                updateCubeTransform();
+            });
+            
+            // Initialize
+            window.addEventListener('load', init);
+            
+            // Prevent iframe from stealing mouse events
+            iframes.forEach(iframe => {
+                iframe.addEventListener('mouseenter', () => {
+                    document.body.style.cursor = 'default';
+                });
+                
+                iframe.addEventListener('mouseleave', () => {
+                    document.body.style.cursor = isDragging ? 'grabbing' : 'grab';
+                });
+            });
+            
+        })();
+    </script>
+</body>
+</html>
