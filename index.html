@@ -1,51 +1,100 @@
 <style>
-  .music-container {
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .radio-text {
+    position: absolute;
+    top: 40px;
+    left: 40px;
+    font-family: Helvetica, Arial, sans-serif;
+    font-weight: 900;
+    font-size: 80px;
+    color: #000;
+    letter-spacing: -2px;
+    line-height: 1;
+    opacity: 0.95;
+    z-index: 10;
+    pointer-events: none;
+    display: none;
+  }
+  
+  .music-player-container {
+    width: 100%;
+    height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    padding: 20px;
-    box-sizing: border-box;
-  }
-  
-  .music-wrapper {
-    width: 100%;
-    max-width: min(660px, 90vw);
-    transition: all 0.3s ease;
-  }
-  
-  .music-iframe {
-    width: 100%;
-    height: 450px;
-    border: none;
-    border-radius: 12px;
-    overflow: hidden;
     background: transparent;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    position: relative;
   }
   
-  /* Responsive height adjustments */
+  .music-player-wrapper {
+    width: 100%;
+    height: 100%;
+    max-width: 660px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .music-player-iframe {
+    width: 100%;
+    height: 100%;
+    max-height: 450px;
+    border: none;
+    background: transparent;
+  }
+  
+  /* Desktop */
+  @media (min-width: 769px) {
+    .radio-text {
+      display: block;
+    }
+    
+    .music-player-wrapper {
+      height: 450px;
+      padding: 20px;
+    }
+  }
+  
+  /* Mobile */
   @media (max-width: 768px) {
-    .music-iframe {
-      height: 400px;
+    .music-player-container {
+      align-items: flex-start;
+      padding-top: env(safe-area-inset-top);
+    }
+    
+    .music-player-wrapper {
+      max-width: 100%;
+      height: calc(100vh - env(safe-area-inset-top));
+    }
+    
+    .music-player-iframe {
+      max-height: none;
     }
   }
   
-  @media (max-width: 480px) {
-    .music-iframe {
-      height: 350px;
-    }
-    .music-wrapper {
-      max-width: 95vw;
+  /* Adjust for very wide screens */
+  @media (min-width: 1400px) {
+    .radio-text {
+      font-size: 100px;
+      top: 50px;
+      left: 50px;
     }
   }
 </style>
 
-<div class="music-container">
-  <div class="music-wrapper">
+<div class="music-player-container">
+  <div class="radio-text">RADIO</div>
+  
+  <div class="music-player-wrapper">
     <iframe 
       allow="autoplay *; encrypted-media *;"
-      class="music-iframe"
+      class="music-player-iframe"
       sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
       src="https://embed.music.apple.com/de/playlist/radio/pl.u-55D6ZNlH65KbDqe?l=en"
     >
