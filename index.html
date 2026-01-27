@@ -157,7 +157,7 @@
             .cube-face-bottom { transform: rotateX(-90deg) translateZ(300px); }
         }
 
-        /* Mobile styles */
+        /* Mobile styles - FIXED RATIOS */
         @media (max-width: 768px) {
             .scene {
                 align-items: center;
@@ -170,10 +170,11 @@
                 height: 320px;
             }
             
+            /* FIXED: Better player container ratio for mobile */
             .player-container {
-                width: 450px;
-                height: 306px;
-                transform: scale(0.6);
+                width: 320px; /* Match cube face width */
+                height: 220px; /* Better aspect ratio for mobile */
+                transform: scale(0.85); /* Adjusted scale for better fit */
             }
             
             .cube-face-front  { transform: rotateY(0deg) translateZ(160px); }
@@ -199,17 +200,18 @@
             }
         }
 
-        /* Very small phones */
+        /* Very small phones - FIXED RATIOS */
         @media (max-width: 480px) and (orientation: portrait) {
             .cube-container {
                 width: 280px;
                 height: 280px;
             }
             
+            /* FIXED: Better player container ratio for small phones */
             .player-container {
-                width: 400px;
-                height: 273px;
-                transform: scale(0.55);
+                width: 280px; /* Match cube face width */
+                height: 190px; /* Better aspect ratio */
+                transform: scale(0.8); /* Adjusted scale */
             }
             
             .cube-face-front  { transform: rotateY(0deg) translateZ(140px); }
@@ -221,6 +223,8 @@
             
             .radio-text {
                 font-size: 50px;
+                left: 20px;
+                top: 20px;
             }
             
             .number-nav {
@@ -229,6 +233,43 @@
             
             .number-btn {
                 font-size: 18px;
+            }
+        }
+
+        /* Landscape mobile */
+        @media (max-width: 900px) and (orientation: landscape) {
+            .scene {
+                padding-top: 0;
+            }
+            
+            .cube-container {
+                width: 280px;
+                height: 280px;
+            }
+            
+            /* FIXED: Landscape player ratio */
+            .player-container {
+                width: 280px;
+                height: 190px;
+                transform: scale(0.8);
+            }
+            
+            .cube-face-front  { transform: rotateY(0deg) translateZ(140px); }
+            .cube-face-back   { transform: rotateY(180deg) translateZ(140px); }
+            .cube-face-right  { transform: rotateY(90deg) translateZ(140px); }
+            .cube-face-left   { transform: rotateY(-90deg) translateZ(140px); }
+            .cube-face-top    { transform: rotateX(90deg) translateZ(140px); }
+            .cube-face-bottom { transform: rotateX(-90deg) translateZ(140px); }
+            
+            .radio-text {
+                top: 15px;
+                left: 15px;
+                font-size: 50px;
+            }
+            
+            .number-nav {
+                bottom: 15px;
+                gap: 15px;
             }
         }
 
@@ -391,6 +432,21 @@
                         this.rotationDirection = 1; // Reset to normal direction for user interactions
                     }
                 });
+                
+                // Handle window resize to adjust cube size for mobile
+                window.addEventListener('resize', this.handleResize.bind(this));
+            }
+            
+            handleResize() {
+                // Recalculate and update player container scale for better mobile fit
+                if (window.innerWidth <= 768) {
+                    this.adjustMobileScale();
+                }
+            }
+            
+            adjustMobileScale() {
+                // This method can be extended to dynamically adjust scale based on screen size
+                // For now, we rely on CSS media queries
             }
             
             rotateToFace(targetFace) {
