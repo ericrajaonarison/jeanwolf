@@ -157,41 +157,41 @@
             .cube-face-bottom { transform: rotateX(-90deg) translateZ(300px); }
         }
 
-        /* Mobile styles - SMALLER CUBE, SAME PLAYER SIZE */
+        /* Mobile styles - LARGER PLAYER */
         @media (max-width: 768px) {
             .scene {
                 align-items: center;
                 justify-content: center;
                 padding-top: env(safe-area-inset-top);
-                perspective: 700px; /* Reduced perspective for smaller cube */
+                perspective: 800px;
             }
             
             .cube-container {
-                width: 280px; /* Smaller cube */
-                height: 280px;
+                width: 340px; /* Slightly larger cube */
+                height: 340px;
             }
             
-            /* KEEP PLAYER SIZE: Same as desktop but with adjusted scale */
+            /* LARGER: Original player 660x450, but let's make it wider */
             .player-container {
-                width: 720px; /* Keep wider player */
-                height: 480px; /* Keep taller player */
-                transform: scale(0.38); /* Adjusted scale for smaller cube (280/720 ≈ 0.388) */
+                width: 720px; /* Wider player container */
+                height: 480px; /* Slightly taller for better aspect ratio */
+                transform: scale(0.52); /* Adjusted scale for larger cube */
             }
             
             .player-container.flipped {
-                transform: scale(0.38) rotate(180deg);
+                transform: scale(0.52) rotate(180deg);
             }
             
             .player-iframe {
                 border-radius: 8px;
             }
             
-            .cube-face-front  { transform: rotateY(0deg) translateZ(140px); }
-            .cube-face-back   { transform: rotateY(180deg) translateZ(140px); }
-            .cube-face-right  { transform: rotateY(90deg) translateZ(140px); }
-            .cube-face-left   { transform: rotateY(-90deg) translateZ(140px); }
-            .cube-face-top    { transform: rotateX(90deg) translateZ(140px); }
-            .cube-face-bottom { transform: rotateX(-90deg) translateZ(140px); }
+            .cube-face-front  { transform: rotateY(0deg) translateZ(170px); }
+            .cube-face-back   { transform: rotateY(180deg) translateZ(170px); }
+            .cube-face-right  { transform: rotateY(90deg) translateZ(170px); }
+            .cube-face-left   { transform: rotateY(-90deg) translateZ(170px); }
+            .cube-face-top    { transform: rotateX(90deg) translateZ(170px); }
+            .cube-face-bottom { transform: rotateX(-90deg) translateZ(170px); }
             
             .radio-text {
                 top: 20px;
@@ -212,35 +212,35 @@
         /* Very small phones */
         @media (max-width: 480px) and (orientation: portrait) {
             .scene {
-                perspective: 550px;
+                perspective: 600px;
             }
             
             .cube-container {
-                width: 240px; /* Even smaller cube */
-                height: 240px;
+                width: 300px; /* Adjusted for very small phones */
+                height: 300px;
             }
             
-            /* KEEP PLAYER SIZE: Same player dimensions */
+            /* LARGER: Wider player for small phones */
             .player-container {
-                width: 650px;
-                height: 430px;
-                transform: scale(0.36); /* Adjusted scale for 240px cube (240/650 ≈ 0.369) */
+                width: 650px; /* Still wider than original */
+                height: 430px; /* Adjusted height */
+                transform: scale(0.46); /* Slightly larger scale */
             }
             
             .player-container.flipped {
-                transform: scale(0.36) rotate(180deg);
+                transform: scale(0.46) rotate(180deg);
             }
             
             .player-iframe {
                 border-radius: 6px;
             }
             
-            .cube-face-front  { transform: rotateY(0deg) translateZ(120px); }
-            .cube-face-back   { transform: rotateY(180deg) translateZ(120px); }
-            .cube-face-right  { transform: rotateY(90deg) translateZ(120px); }
-            .cube-face-left   { transform: rotateY(-90deg) translateZ(120px); }
-            .cube-face-top    { transform: rotateX(90deg) translateZ(120px); }
-            .cube-face-bottom { transform: rotateX(-90deg) translateZ(120px); }
+            .cube-face-front  { transform: rotateY(0deg) translateZ(150px); }
+            .cube-face-back   { transform: rotateY(180deg) translateZ(150px); }
+            .cube-face-right  { transform: rotateY(90deg) translateZ(150px); }
+            .cube-face-left   { transform: rotateY(-90deg) translateZ(150px); }
+            .cube-face-top    { transform: rotateX(90deg) translateZ(150px); }
+            .cube-face-bottom { transform: rotateX(-90deg) translateZ(150px); }
             
             .radio-text {
                 font-size: 50px;
@@ -257,787 +257,39 @@
             }
         }
 
-        /* Landscape mobile */
+        /* Landscape mobile - LARGER PLAYER */
         @media (max-width: 900px) and (orientation: landscape) {
             .scene {
-                perspective: 600px;
+                perspective: 700px;
                 padding-top: 0;
             }
             
             .cube-container {
-                width: 260px; /* Smaller cube for landscape */
-                height: 260px;
+                width: 320px;
+                height: 320px;
             }
             
-            /* KEEP PLAYER SIZE: Same player dimensions */
+            /* LARGER: Wider player for landscape */
             .player-container {
-                width: 700px;
-                height: 460px;
-                transform: scale(0.36); /* Adjusted scale for 260px cube (260/700 ≈ 0.371) */
+                width: 700px; /* Wider for landscape */
+                height: 460px; /* Adjusted height */
+                transform: scale(0.48); /* Adjusted scale */
             }
             
             .player-container.flipped {
-                transform: scale(0.36) rotate(180deg);
+                transform: scale(0.48) rotate(180deg);
             }
             
             .player-iframe {
                 border-radius: 6px;
             }
             
-            .cube-face-front  { transform: rotateY(0deg) translateZ(130px); }
-            .cube-face-back   { transform: rotateY(180deg) translateZ(130px); }
-            .cube-face-right  { transform: rotateY(90deg) translateZ(130px); }
-            .cube-face-left   { transform: rotateY(-90deg) translateZ(130px); }
-            .cube-face-top    { transform: rotateX(90deg) translateZ(130px); }
-            .cube-face-bottom { transform: rotateX(-90deg) translateZ(130px); }
-            
-            .radio-text {
-                top: 15px;
-                left: 15px;
-                font-size: 50px;
-            }
-            
-            .number-nav {
-                bottom: 15px;
-                gap: 15px;
-            }
-        }
-
-        /* Hide scrollbars */
-        ::-webkit-scrollbar {
-            display: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="radio-text">RADIO</div>
-    
-    <div class="scene" id="scene">
-        <div class="cube-container" id="cubeContainer">
-            <!-- 1: Radio 1 -->
-            <div class="cube-face cube-face-front">
-                <div class="player-container">
-                    <iframe 
-                        allow="autoplay *; encrypted-media *;"
-                        class="player-iframe"
-                        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-                        src="https://embed.music.apple.com/de/playlist/radio-1/pl.u-55D6ZNlH65KbDqe?l=en"
-                    ></iframe>
-                </div>
-            </div>
-            
-            <!-- 2: Radio 2 (ON LEFT) -->
-            <div class="cube-face cube-face-left">
-                <div class="player-container">
-                    <iframe 
-                        allow="autoplay *; encrypted-media *;"
-                        class="player-iframe"
-                        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-                        src="https://embed.music.apple.com/de/playlist/radio-2/pl.u-pMylgxvSWJVDZ9j?l=en"
-                    ></iframe>
-                </div>
-            </div>
-            
-            <!-- 3: Radio 3 -->
-            <div class="cube-face cube-face-back">
-                <div class="player-container">
-                    <iframe 
-                        allow="autoplay *; encrypted-media *;"
-                        class="player-iframe"
-                        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-                        src="https://embed.music.apple.com/de/playlist/radio-3/pl.u-zPyLl9Rue01ypmo?l=en"
-                    ></iframe>
-                </div>
-            </div>
-            
-            <!-- 4: Radio 4 (ON RIGHT) -->
-            <div class="cube-face cube-face-right">
-                <div class="player-container">
-                    <iframe 
-                        allow="autoplay *; encrypted-media *;"
-                        class="player-iframe"
-                        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-                        src="https://embed.music.apple.com/de/playlist/radio-4/pl.u-qxylEY6s3maARZy?l=en"
-                    ></iframe>
-                </div>
-            </div>
-            
-            <!-- 5: Radio 5 -->
-            <div class="cube-face cube-face-top">
-                <div class="player-container">
-                    <iframe 
-                        allow="autoplay *; encrypted-media *;"
-                        class="player-iframe"
-                        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-                        src="https://embed.music.apple.com/de/playlist/radio-5/pl.u-4JomaBmCJLE6Zg0?l=en"
-                    ></iframe>
-                </div>
-            </div>
-            
-            <!-- 6: Radio 6 -->
-            <div class="cube-face cube-face-bottom">
-                <div class="player-container">
-                    <iframe 
-                        allow="autoplay *; encrypted-media *;"
-                        class="player-iframe"
-                        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-                        src="https://embed.music.apple.com/de/playlist/radio-6/pl.u-55D6Zq7I65KbDqe?l=en"
-                    ></iframe>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Number Navigation -->
-    <div class="number-nav" id="numberNav">
-        <button class="number-btn active" onclick="radioCube.rotateToFace(0)">1</button>
-        <button class="number-btn" onclick="radioCube.rotateToFace(1)">2</button>
-        <button class="number-btn" onclick="radioCube.rotateToFace(2)">3</button>
-        <button class="number-btn" onclick="radioCube.rotateToFace(3)">4</button>
-        <button class="number-btn" onclick="radioCube.rotateToFace(4)">5</button>
-        <button class="number-btn" onclick="radioCube.rotateToFace(5)">6</button>
-    </div>
-
-    <script>
-        class RadioCube {
-            constructor() {
-                this.cubeContainer = document.getElementById('cubeContainer');
-                this.scene = document.getElementById('scene');
-                this.numberNav = document.getElementById('numberNav');
-                
-                // Current rotation
-                this.currentRotation = { x: 0, y: 0 };
-                this.currentFace = 0;
-                this.isAnimating = false;
-                this.hasInteracted = false;
-                this.autoRotate = false;
-                this.autoRotateInterval = null;
-                this.inactivityTimeout = null;
-                this.rotationDirection = 1; // 1 for clockwise, -1 for counter-clockwise
-                
-                // Face rotations - Radio 2 on left, Radio 4 on right
-                this.faceRotations = [
-                    { x: 0, y: 0 },      // 1: Front (Radio 1)
-                    { x: 0, y: -90 },    // 2: Left (Radio 2) - ON LEFT
-                    { x: 0, y: 180 },    // 3: Back (Radio 3)
-                    { x: 0, y: 90 },     // 4: Right (Radio 4) - ON RIGHT
-                    { x: -90, y: 0 },    // 5: Top (Radio 5)
-                    { x: 90, y: 0 }      // 6: Bottom (Radio 6)
-                ];
-                
-                this.init();
-            }
-            
-            init() {
-                this.updateCubeTransform();
-                this.updatePlayerFlipStates();
-                this.setupEventListeners();
-                this.updateNumberButtons();
-                
-                // Start auto-rotation after 15 seconds
-                setTimeout(() => {
-                    if (!this.hasInteracted) {
-                        // Invert the rotation direction for auto-rotation
-                        this.rotationDirection = -1; // Make it opposite direction
-                        this.startAutoRotation();
-                    }
-                }, 15000); // 15 seconds
-            }
-            
-            setupEventListeners() {
-                // Click on cube to stop auto-rotation
-                this.scene.addEventListener('click', (e) => {
-                    if (e.target === this.scene || e.target.classList.contains('cube-container')) {
-                        this.stopAutoRotation();
-                        this.hasInteracted = true;
-                        this.rotationDirection = 1; // Reset to normal direction for user interactions
-                    }
-                });
-                
-                // Keyboard navigation
-                document.addEventListener('keydown', (e) => {
-                    if (e.key >= '1' && e.key <= '6') {
-                        const faceIndex = parseInt(e.key) - 1;
-                        this.rotateToFace(faceIndex);
-                        this.rotationDirection = 1; // Reset to normal direction for user interactions
-                    }
-                });
-                
-                // Handle window resize
-                window.addEventListener('resize', () => {
-                    this.updatePlayerFlipStates();
-                });
-            }
-            
-            rotateToFace(targetFace) {
-                // If already on that face or animating, do nothing
-                if (this.isAnimating || targetFace === this.currentFace) return;
-                
-                // Stop auto-rotation
-                this.stopAutoRotation();
-                this.isAnimating = true;
-                this.hasInteracted = true;
-                this.rotationDirection = 1; // Normal direction for user interactions
-                
-                // Clear any existing timeouts
-                if (this.inactivityTimeout) {
-                    clearTimeout(this.inactivityTimeout);
-                }
-                
-                // Calculate shortest rotation path
-                const startRotation = this.currentRotation;
-                const targetRotation = this.faceRotations[targetFace];
-                
-                // Calculate shortest path for Y rotation
-                let deltaY = targetRotation.y - startRotation.y;
-                if (deltaY > 180) deltaY -= 360;
-                if (deltaY < -180) deltaY += 360;
-                
-                // Calculate shortest path for X rotation
-                let deltaX = targetRotation.x - startRotation.x;
-                if (deltaX > 180) deltaX -= 360;
-                if (deltaX < -180) deltaX += 360;
-                
-                // Set target rotation
-                this.currentRotation.x = startRotation.x + deltaX;
-                this.currentRotation.y = startRotation.y + deltaY;
-                this.currentFace = targetFace;
-                
-                // Update cube
-                this.cubeContainer.style.transition = 'transform 0.6s ease';
-                this.updateCubeTransform();
-                
-                // Update number buttons
-                this.updateNumberButtons();
-                
-                // Update player flip state INSTANTLY - no waiting for animation
-                this.updatePlayerFlipStates();
-                
-                // Finish animation
-                setTimeout(() => {
-                    this.isAnimating = false;
-                    
-                    // Reset inactivity timer with 15 seconds
-                    this.resetInactivityTimer();
-                }, 600);
-            }
-            
-            updateCubeTransform() {
-                const x = this.currentRotation.x;
-                const y = this.currentRotation.y;
-                
-                this.cubeContainer.style.transform = `
-                    rotateX(${x}deg) 
-                    rotateY(${y}deg)
-                `;
-            }
-            
-            updatePlayerFlipStates() {
-                const playerContainers = document.querySelectorAll('.player-container');
-                
-                playerContainers.forEach((container, index) => {
-                    // Get the normal vector for this face
-                    const faceNormal = this.getFaceNormal(index);
-                    
-                    // Check if face is upside down (negative Y in world space)
-                    if (faceNormal.y < -0.1) {
-                        container.classList.add('flipped');
-                    } else {
-                        container.classList.remove('flipped');
-                    }
-                });
-            }
-            
-            getFaceNormal(faceIndex) {
-                // Face normals in local space
-                const faceNormals = [
-                    { x: 0, y: 0, z: 1 },   // 1: Front
-                    { x: -1, y: 0, z: 0 },  // 2: Left (Radio 2)
-                    { x: 0, y: 0, z: -1 },  // 3: Back
-                    { x: 1, y: 0, z: 0 },   // 4: Right (Radio 4)
-                    { x: 0, y: 1, z: 0 },   // 5: Top
-                    { x: 0, y: -1, z: 0 },  // 6: Bottom
-                ];
-                
-                const normal = faceNormals[faceIndex];
-                
-                // Convert to radians
-                const radX = this.currentRotation.x * Math.PI / 180;
-                const radY = this.currentRotation.y * Math.PI / 180;
-                
-                // Apply Y rotation
-                const cosY = Math.cos(radY);
-                const sinY = Math.sin(radY);
-                let x1 = normal.x * cosY - normal.z * sinY;
-                let y1 = normal.y;
-                let z1 = normal.x * sinY + normal.z * cosY;
-                
-                // Apply X rotation
-                const cosX = Math.cos(radX);
-                const sinX = Math.sin(radX);
-                const y2 = y1 * cosX - z1 * sinX;
-                
-                return {
-                    x: x1,
-                    y: y2
-                };
-            }
-            
-            updateNumberButtons() {
-                const buttons = this.numberNav.querySelectorAll('.number-btn');
-                buttons.forEach((btn, index) => {
-                    if (index === this.currentFace) {
-                        btn.classList.add('active');
-                    } else {
-                        btn.classList.remove('active');
-                    }
-                });
-            }
-            
-            startAutoRotation() {
-                if (this.hasInteracted) return;
-                
-                this.autoRotate = true;
-                
-                // If on face 5 (top) or 6 (bottom), rotate to face 1 (front) first
-                if (this.currentFace === 4 || this.currentFace === 5) {
-                    this.smoothRotateToFace(0, () => {
-                        this.startContinuousRotation();
-                    });
-                } else {
-                    this.startContinuousRotation();
-                }
-            }
-            
-            smoothRotateToFace(targetFace, onComplete) {
-                if (this.isAnimating || targetFace === this.currentFace) {
-                    if (onComplete) onComplete();
-                    return;
-                }
-                
-                this.isAnimating = true;
-                
-                // Calculate shortest rotation path
-                const startRotation = this.currentRotation;
-                const targetRotation = this.faceRotations[targetFace];
-                
-                // Calculate shortest path for Y rotation
-                let deltaY = targetRotation.y - startRotation.y;
-                if (deltaY > 180) deltaY -= 360;
-                if (deltaY < -180) deltaY += 360;
-                
-                // Calculate shortest path for X rotation
-                let deltaX = targetRotation.x - startRotation.x;
-                if (deltaX > 180) deltaX -= 360;
-                if (deltaX < -180) deltaX += 360;
-                
-                // Set target rotation
-                this.currentRotation.x = startRotation.x + deltaX;
-                this.currentRotation.y = startRotation.y + deltaY;
-                this.currentFace = targetFace;
-                
-                // Update cube with same speed as auto-rotation
-                this.cubeContainer.style.transition = 'transform 1.5s ease';
-                this.updateCubeTransform();
-                
-                // Update number buttons
-                this.updateNumberButtons();
-                
-                // Update player flip state
-                this.updatePlayerFlipStates();
-                
-                // Finish animation
-                setTimeout(() => {
-                    this.isAnimating = false;
-                    if (onComplete) onComplete();
-                }, 1500);
-            }
-            
-            startContinuousRotation() {
-                let rotationAngle = this.currentRotation.y;
-                
-                const rotate = () => {
-                    if (!this.autoRotate || this.hasInteracted) return;
-                    
-                    // Use the rotationDirection to determine rotation direction
-                    // When inactive, rotationDirection is -1 (opposite direction)
-                    rotationAngle += 0.1 * this.rotationDirection;
-                    
-                    // Update rotation
-                    this.currentRotation.y = rotationAngle;
-                    this.cubeContainer.style.transition = 'transform 0.1s linear';
-                    this.updateCubeTransform();
-                    
-                    // Update which face is most visible
-                    const normalizedAngle = ((rotationAngle % 360) + 360) % 360;
-                    let newFace = this.currentFace;
-                    
-                    // Map angles to faces - Radio 2 on left, Radio 4 on right
-                    // Since we're rotating in opposite direction, the face mapping needs to be adjusted
-                    if (this.rotationDirection === 1) {
-                        // Normal direction (clockwise)
-                        if (normalizedAngle >= 315 || normalizedAngle < 45) newFace = 0; // Front
-                        else if (normalizedAngle >= 45 && normalizedAngle < 135) newFace = 3; // Right (Radio 4)
-                        else if (normalizedAngle >= 135 && normalizedAngle < 225) newFace = 2; // Back
-                        else if (normalizedAngle >= 225 && normalizedAngle < 315) newFace = 1; // Left (Radio 2)
-                    } else {
-                        // Opposite direction (counter-clockwise) - inverted mapping
-                        if (normalizedAngle >= 315 || normalizedAngle < 45) newFace = 0; // Front
-                        else if (normalizedAngle >= 45 && normalizedAngle < 135) newFace = 1; // Left (Radio 2) - INVERTED
-                        else if (normalizedAngle >= 135 && normalizedAngle < 225) newFace = 2; // Back
-                        else if (normalizedAngle >= 225 && normalizedAngle < 315) newFace = 3; // Right (Radio 4) - INVERTED
-                    }
-                    
-                    if (newFace !== this.currentFace) {
-                        this.currentFace = newFace;
-                        this.updateNumberButtons();
-                        this.updatePlayerFlipStates();
-                    }
-                    
-                    // Continue rotation
-                    this.autoRotateInterval = requestAnimationFrame(rotate);
-                };
-                
-                rotate();
-            }
-            
-            stopAutoRotation() {
-                this.autoRotate = false;
-                
-                if (this.autoRotateInterval) {
-                    cancelAnimationFrame(this.autoRotateInterval);
-                    this.autoRotateInterval = null;
-                }
-            }
-            
-            resetInactivityTimer() {
-                if (this.inactivityTimeout) {
-                    clearTimeout(this.inactivityTimeout);
-                }
-                
-                // Reset timer to 15 seconds
-                this.inactivityTimeout = setTimeout(() => {
-                    if (this.hasInteracted && !this.isAnimating) {
-                        this.hasInteracted = false;
-                        // Set rotation to opposite direction for auto-rotation
-                        this.rotationDirection = -1;
-                        this.startAutoRotation();
-                    }
-                }, 15000); // 15 seconds
-            }
-        }
-        
-        // Initialize when page loads
-        window.addEventListener('load', () => {
-            window.radioCube = new RadioCube();
-        });
-        
-        // Handle page visibility
-        document.addEventListener('visibilitychange', () => {
-            if (window.radioCube && document.hidden) {
-                window.radioCube.stopAutoRotation();
-            } else if (window.radioCube && !document.hidden && !window.radioCube.hasInteracted) {
-                setTimeout(() => {
-                    // Set rotation to opposite direction when coming back from hidden
-                    window.radioCube.rotationDirection = -1;
-                    window.radioCube.startAutoRotation();
-                }, 1000);
-            }
-        });
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: #000;
-            font-family: Helvetica, Arial, sans-serif;
-        }
-
-        .radio-text {
-            position: fixed;
-            top: 40px;
-            left: 40px;
-            font-family: Helvetica, Arial, sans-serif;
-            font-weight: 900;
-            font-size: 80px;
-            color: #fff;
-            letter-spacing: -2px;
-            line-height: 1;
-            opacity: 0.95;
-            z-index: 100;
-            pointer-events: none;
-            display: block;
-        }
-
-        .scene {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            perspective: 1200px;
-            transform-style: preserve-3d;
-        }
-
-        .cube-container {
-            position: relative;
-            width: 500px;
-            height: 500px;
-            transform-style: preserve-3d;
-            transform-origin: center center;
-            transition: transform 0.6s ease;
-        }
-
-        /* SOLID RED CUBE FACES */
-        .cube-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: #ff0000;
-            border: 3px solid #cc0000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            backface-visibility: hidden;
-            pointer-events: none;
-        }
-
-        .player-container {
-            position: relative;
-            width: 660px;
-            height: 450px;
-            pointer-events: auto;
-            transform-origin: center center;
-            transform: scale(0.75);
-        }
-
-        /* Flip players instantly when upside down - NO TRANSITION */
-        .player-container.flipped {
-            transform: scale(0.75) rotate(180deg);
-        }
-
-        .player-iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: transparent;
-            border-radius: 10px;
-            pointer-events: auto;
-        }
-
-        /* Cube face positions */
-        .cube-face-front  { transform: rotateY(0deg) translateZ(250px); }
-        .cube-face-back   { transform: rotateY(180deg) translateZ(250px); }
-        .cube-face-right  { transform: rotateY(90deg) translateZ(250px); }
-        .cube-face-left   { transform: rotateY(-90deg) translateZ(250px); }
-        .cube-face-top    { transform: rotateX(90deg) translateZ(250px); }
-        .cube-face-bottom { transform: rotateX(-90deg) translateZ(250px); }
-
-        /* Number Navigation */
-        .number-nav {
-            position: fixed;
-            bottom: 40px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            z-index: 100;
-        }
-
-        .number-btn {
-            color: #fff;
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 24px;
-            font-weight: 400;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0;
-            text-decoration: none;
-            border-bottom: 2px solid transparent;
-            transition: font-weight 0.2s, border-color 0.2s;
-        }
-
-        .number-btn:hover {
-            border-bottom: 2px solid #fff;
-        }
-
-        .number-btn.active {
-            font-weight: 900;
-            border-bottom: 2px solid #fff;
-        }
-
-        /* Desktop styles */
-        @media (min-width: 769px) {
-            .cube-container {
-                width: 600px;
-                height: 600px;
-            }
-            
-            .player-container {
-                transform: scale(0.85);
-            }
-            
-            .cube-face-front  { transform: rotateY(0deg) translateZ(300px); }
-            .cube-face-back   { transform: rotateY(180deg) translateZ(300px); }
-            .cube-face-right  { transform: rotateY(90deg) translateZ(300px); }
-            .cube-face-left   { transform: rotateY(-90deg) translateZ(300px); }
-            .cube-face-top    { transform: rotateX(90deg) translateZ(300px); }
-            .cube-face-bottom { transform: rotateX(-90deg) translateZ(300px); }
-        }
-
-        /* Mobile styles - SMALLER CUBE, SAME PLAYER SIZE */
-        @media (max-width: 768px) {
-            .scene {
-                align-items: center;
-                justify-content: center;
-                padding-top: env(safe-area-inset-top);
-                perspective: 700px; /* Reduced perspective for smaller cube */
-            }
-            
-            .cube-container {
-                width: 280px; /* Smaller cube */
-                height: 280px;
-            }
-            
-            /* KEEP PLAYER SIZE: Same as desktop but with adjusted scale */
-            .player-container {
-                width: 720px; /* Keep wider player */
-                height: 480px; /* Keep taller player */
-                transform: scale(0.38); /* Adjusted scale for smaller cube (280/720 ≈ 0.388) */
-            }
-            
-            .player-container.flipped {
-                transform: scale(0.38) rotate(180deg);
-            }
-            
-            .player-iframe {
-                border-radius: 8px;
-            }
-            
-            .cube-face-front  { transform: rotateY(0deg) translateZ(140px); }
-            .cube-face-back   { transform: rotateY(180deg) translateZ(140px); }
-            .cube-face-right  { transform: rotateY(90deg) translateZ(140px); }
-            .cube-face-left   { transform: rotateY(-90deg) translateZ(140px); }
-            .cube-face-top    { transform: rotateX(90deg) translateZ(140px); }
-            .cube-face-bottom { transform: rotateX(-90deg) translateZ(140px); }
-            
-            .radio-text {
-                top: 20px;
-                left: 20px;
-                font-size: 60px;
-            }
-            
-            .number-nav {
-                bottom: 20px;
-                gap: 20px;
-            }
-            
-            .number-btn {
-                font-size: 20px;
-            }
-        }
-
-        /* Very small phones */
-        @media (max-width: 480px) and (orientation: portrait) {
-            .scene {
-                perspective: 550px;
-            }
-            
-            .cube-container {
-                width: 240px; /* Even smaller cube */
-                height: 240px;
-            }
-            
-            /* KEEP PLAYER SIZE: Same player dimensions */
-            .player-container {
-                width: 650px;
-                height: 430px;
-                transform: scale(0.36); /* Adjusted scale for 240px cube (240/650 ≈ 0.369) */
-            }
-            
-            .player-container.flipped {
-                transform: scale(0.36) rotate(180deg);
-            }
-            
-            .player-iframe {
-                border-radius: 6px;
-            }
-            
-            .cube-face-front  { transform: rotateY(0deg) translateZ(120px); }
-            .cube-face-back   { transform: rotateY(180deg) translateZ(120px); }
-            .cube-face-right  { transform: rotateY(90deg) translateZ(120px); }
-            .cube-face-left   { transform: rotateY(-90deg) translateZ(120px); }
-            .cube-face-top    { transform: rotateX(90deg) translateZ(120px); }
-            .cube-face-bottom { transform: rotateX(-90deg) translateZ(120px); }
-            
-            .radio-text {
-                font-size: 50px;
-                left: 20px;
-                top: 20px;
-            }
-            
-            .number-nav {
-                gap: 15px;
-            }
-            
-            .number-btn {
-                font-size: 18px;
-            }
-        }
-
-        /* Landscape mobile */
-        @media (max-width: 900px) and (orientation: landscape) {
-            .scene {
-                perspective: 600px;
-                padding-top: 0;
-            }
-            
-            .cube-container {
-                width: 260px; /* Smaller cube for landscape */
-                height: 260px;
-            }
-            
-            /* KEEP PLAYER SIZE: Same player dimensions */
-            .player-container {
-                width: 700px;
-                height: 460px;
-                transform: scale(0.36); /* Adjusted scale for 260px cube (260/700 ≈ 0.371) */
-            }
-            
-            .player-container.flipped {
-                transform: scale(0.36) rotate(180deg);
-            }
-            
-            .player-iframe {
-                border-radius: 6px;
-            }
-            
-            .cube-face-front  { transform: rotateY(0deg) translateZ(130px); }
-            .cube-face-back   { transform: rotateY(180deg) translateZ(130px); }
-            .cube-face-right  { transform: rotateY(90deg) translateZ(130px); }
-            .cube-face-left   { transform: rotateY(-90deg) translateZ(130px); }
-            .cube-face-top    { transform: rotateX(90deg) translateZ(130px); }
-            .cube-face-bottom { transform: rotateX(-90deg) translateZ(130px); }
+            .cube-face-front  { transform: rotateY(0deg) translateZ(160px); }
+            .cube-face-back   { transform: rotateY(180deg) translateZ(160px); }
+            .cube-face-right  { transform: rotateY(90deg) translateZ(160px); }
+            .cube-face-left   { transform: rotateY(-90deg) translateZ(160px); }
+            .cube-face-top    { transform: rotateX(90deg) translateZ(160px); }
+            .cube-face-bottom { transform: rotateX(-90deg) translateZ(160px); }
             
             .radio-text {
                 top: 15px;
