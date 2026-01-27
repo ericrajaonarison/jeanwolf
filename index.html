@@ -157,12 +157,13 @@
             .cube-face-bottom { transform: rotateX(-90deg) translateZ(300px); }
         }
 
-        /* Mobile styles - SIMPLER FIX */
+        /* Mobile styles - PROPER SCALING FIX */
         @media (max-width: 768px) {
             .scene {
                 align-items: center;
                 justify-content: center;
                 padding-top: env(safe-area-inset-top);
+                perspective: 800px; /* Reduce perspective for mobile */
             }
             
             .cube-container {
@@ -170,19 +171,21 @@
                 height: 320px;
             }
             
-            /* SIMPLER FIX: Make player smaller but visible */
+            /* FIXED: Proper scaling calculation for mobile */
+            /* Original player size: 660x450, scaled to fit in 320px cube */
+            /* 320px / 660px = 0.4848 scale factor */
             .player-container {
-                width: 300px;
-                height: 200px;
-                transform: scale(1);
+                width: 660px;
+                height: 450px;
+                transform: scale(0.48); /* Match the cube size ratio */
             }
             
             .player-container.flipped {
-                transform: scale(1) rotate(180deg);
+                transform: scale(0.48) rotate(180deg);
             }
             
             .player-iframe {
-                border-radius: 5px;
+                border-radius: 8px;
             }
             
             .cube-face-front  { transform: rotateY(0deg) translateZ(160px); }
@@ -210,24 +213,29 @@
 
         /* Very small phones */
         @media (max-width: 480px) and (orientation: portrait) {
+            .scene {
+                perspective: 600px;
+            }
+            
             .cube-container {
                 width: 280px;
                 height: 280px;
             }
             
-            /* Adjust player size for small phones */
+            /* FIXED: Adjust scale for smaller screens */
+            /* 280px / 660px = 0.4242 scale factor */
             .player-container {
-                width: 260px;
-                height: 175px;
-                transform: scale(1);
+                width: 660px;
+                height: 450px;
+                transform: scale(0.42);
             }
             
             .player-container.flipped {
-                transform: scale(1) rotate(180deg);
+                transform: scale(0.42) rotate(180deg);
             }
             
             .player-iframe {
-                border-radius: 5px;
+                border-radius: 6px;
             }
             
             .cube-face-front  { transform: rotateY(0deg) translateZ(140px); }
@@ -255,34 +263,37 @@
         /* Landscape mobile */
         @media (max-width: 900px) and (orientation: landscape) {
             .scene {
+                perspective: 700px;
                 padding-top: 0;
             }
             
             .cube-container {
-                width: 280px;
-                height: 280px;
+                width: 300px;
+                height: 300px;
             }
             
+            /* FIXED: Scale for landscape */
+            /* 300px / 660px = 0.4545 scale factor */
             .player-container {
-                width: 260px;
-                height: 175px;
-                transform: scale(1);
+                width: 660px;
+                height: 450px;
+                transform: scale(0.45);
             }
             
             .player-container.flipped {
-                transform: scale(1) rotate(180deg);
+                transform: scale(0.45) rotate(180deg);
             }
             
             .player-iframe {
-                border-radius: 5px;
+                border-radius: 6px;
             }
             
-            .cube-face-front  { transform: rotateY(0deg) translateZ(140px); }
-            .cube-face-back   { transform: rotateY(180deg) translateZ(140px); }
-            .cube-face-right  { transform: rotateY(90deg) translateZ(140px); }
-            .cube-face-left   { transform: rotateY(-90deg) translateZ(140px); }
-            .cube-face-top    { transform: rotateX(90deg) translateZ(140px); }
-            .cube-face-bottom { transform: rotateX(-90deg) translateZ(140px); }
+            .cube-face-front  { transform: rotateY(0deg) translateZ(150px); }
+            .cube-face-back   { transform: rotateY(180deg) translateZ(150px); }
+            .cube-face-right  { transform: rotateY(90deg) translateZ(150px); }
+            .cube-face-left   { transform: rotateY(-90deg) translateZ(150px); }
+            .cube-face-top    { transform: rotateX(90deg) translateZ(150px); }
+            .cube-face-bottom { transform: rotateX(-90deg) translateZ(150px); }
             
             .radio-text {
                 top: 15px;
@@ -454,6 +465,12 @@
                         this.rotateToFace(faceIndex);
                         this.rotationDirection = 1; // Reset to normal direction for user interactions
                     }
+                });
+                
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    // Recalculate player flip states on resize
+                    this.updatePlayerFlipStates();
                 });
             }
             
