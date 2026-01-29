@@ -161,7 +161,7 @@
             .cube-face-bottom { transform: rotateX(-90deg) translateZ(250px); }
         }
 
-        /* Mobile styles - WIDER PLAYER FOR ALL PHONES */
+        /* Mobile styles - WIDER PLAYER */
         @media (max-width: 768px) {
             .scene {
                 align-items: center;
@@ -175,15 +175,15 @@
                 height: 280px; /* Reduced from 340px */
             }
             
-            /* WIDER PLAYER FOR ALL PHONES */
+            /* MUCH WIDER PLAYER */
             .player-container {
-                width: 850px; /* WIDER - was 720px */
-                height: 500px; /* Adjusted height for better proportion */
-                transform: scale(0.48); /* Adjusted scale for wider player */
+                width: 900px; /* WIDER - was 720px, now 900px */
+                height: 500px; /* Slightly taller for better aspect ratio */
+                transform: scale(0.45); /* Adjusted scale for wider player */
             }
             
             .player-container.flipped {
-                transform: scale(0.48) rotate(180deg);
+                transform: scale(0.45) rotate(180deg);
             }
             
             .player-iframe {
@@ -213,7 +213,7 @@
             }
         }
 
-        /* Very small phones - WIDER PLAYER FOR ALL PHONES */
+        /* Very small phones - WIDER PLAYER */
         @media (max-width: 480px) and (orientation: portrait) {
             .scene {
                 perspective: 600px;
@@ -224,15 +224,15 @@
                 height: 240px; /* Reduced from 300px */
             }
             
-            /* WIDER PLAYER FOR ALL PHONES */
+            /* MUCH WIDER PLAYER */
             .player-container {
-                width: 850px; /* WIDER - same as mobile */
+                width: 900px; /* WIDER - same width for consistency */
                 height: 500px; /* Adjusted height */
-                transform: scale(0.42); /* Adjusted scale for wider player */
+                transform: scale(0.38); /* Adjusted scale for wider player */
             }
             
             .player-container.flipped {
-                transform: scale(0.42) rotate(180deg);
+                transform: scale(0.38) rotate(180deg);
             }
             
             .player-iframe {
@@ -261,7 +261,7 @@
             }
         }
 
-        /* Landscape mobile - WIDER PLAYER FOR ALL PHONES */
+        /* Landscape mobile - WIDER PLAYER */
         @media (max-width: 900px) and (orientation: landscape) {
             .scene {
                 perspective: 700px;
@@ -273,15 +273,15 @@
                 height: 260px; /* Reduced from 320px */
             }
             
-            /* WIDER PLAYER FOR ALL PHONES */
+            /* MUCH WIDER PLAYER */
             .player-container {
-                width: 850px; /* WIDER - same as mobile */
+                width: 900px; /* WIDER - same width for consistency */
                 height: 500px; /* Adjusted height */
-                transform: scale(0.45); /* Adjusted scale for wider player */
+                transform: scale(0.42); /* Adjusted scale for wider player */
             }
             
             .player-container.flipped {
-                transform: scale(0.45) rotate(180deg);
+                transform: scale(0.42) rotate(180deg);
             }
             
             .player-iframe {
