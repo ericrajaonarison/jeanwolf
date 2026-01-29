@@ -269,21 +269,30 @@
             border: none;
             background: transparent;
             border-radius: 10px;
+            /* Allow pointer events only when not swiping */
+            pointer-events: auto;
         }
 
-        /* Invisible overlay for swipe detection */
+        /* Invisible swipe overlay - covers the whole carousel */
         .mobile-swipe-overlay {
             position: absolute;
-            top: 0;
+            top: 70px; /* Below the header */
             left: 0;
             width: 100%;
-            height: 100%;
+            height: calc(100% - 70px);
             z-index: 5;
-            /* Make it transparent but still capture touch events */
             background: transparent;
-            /* Important: This makes it capture touch events but be visually invisible */
             pointer-events: auto;
             opacity: 0;
+            /* Prevent text selection during swipe */
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: pan-y; /* Allow vertical scrolling, but we'll handle horizontal */
+        }
+
+        /* Active state when swiping */
+        .mobile-swipe-overlay.active {
+            opacity: 0.01; /* Almost invisible but captures events */
         }
 
         /* Carousel indicators */
@@ -536,6 +545,9 @@
                 <!-- Indicators will be dynamically created here -->
             </div>
         </div>
+        
+        <!-- SINGLE invisible swipe overlay for entire carousel -->
+        <div class="mobile-swipe-overlay" id="mobileSwipeOverlay"></div>
     </div>
 
     <script>
@@ -553,6 +565,7 @@
                 this.mobileCarouselTitle = document.getElementById('mobileCarouselTitle');
                 this.mobileCarouselTrack = document.getElementById('mobileCarouselTrack');
                 this.mobileCarouselIndicators = document.getElementById('mobileCarouselIndicators');
+                this.mobileSwipeOverlay = document.getElementById('mobileSwipeOverlay');
                 
                 // Cube radio URLs (unchanged order)
                 this.cubeRadioUrls = [
@@ -596,17 +609,17 @@
                 this.carouselInactivityTimeout = null;
                 this.carouselSlides = [];
                 this.carouselIndicators = [];
-                this.swipeOverlays = []; // Will hold the invisible overlays
                 
-                // Touch/swipe tracking
+                // Swipe tracking - SIMPLIFIED
                 this.touchStartX = 0;
                 this.touchStartY = 0;
                 this.touchEndX = 0;
                 this.touchEndY = 0;
                 this.swipeThreshold = 50;
                 this.isSwiping = false;
-                this.swipeDirection = null; // 'horizontal' or 'vertical'
-                this.verticalScrollThreshold = 10; // Pixels before we consider it vertical scrolling
+                this.touchStartTime = 0;
+                this.tapThreshold = 200; // ms for tap detection
+                this.tapMoveThreshold = 10; // pixels for tap detection
                 
                 // Face rotations for desktop (unchanged)
                 this.faceRotations = [
@@ -642,7 +655,6 @@
                 // Clear existing slides and indicators
                 this.mobileCarouselTrack.innerHTML = '';
                 this.mobileCarouselIndicators.innerHTML = '';
-                this.swipeOverlays = [];
                 
                 // Create slides for each radio using CAROUSEL URLs (with 2 and 4 switched)
                 for (let i = 0; i < this.carouselRadioUrls.length; i++) {
@@ -658,16 +670,9 @@
                     iframe.sandbox = 'allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation';
                     iframe.src = this.carouselRadioUrls[i];
                     
-                    // Create invisible swipe overlay
-                    const overlay = document.createElement('div');
-                    overlay.className = 'mobile-swipe-overlay';
-                    overlay.dataset.index = i;
-                    
                     slide.appendChild(iframe);
-                    slide.appendChild(overlay); // Add overlay on top of iframe
                     this.mobileCarouselTrack.appendChild(slide);
                     this.carouselSlides.push(slide);
-                    this.swipeOverlays.push(overlay);
                     
                     // Create indicator
                     const indicator = document.createElement('button');
@@ -680,166 +685,6 @@
                     
                     this.mobileCarouselIndicators.appendChild(indicator);
                     this.carouselIndicators.push(indicator);
-                }
-                
-                // Setup swipe events on the overlays
-                this.setupSwipeOverlayEvents();
-            }
-            
-            setupSwipeOverlayEvents() {
-                // Add event listeners to each overlay
-                this.swipeOverlays.forEach(overlay => {
-                    // Touch events
-                    overlay.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: true });
-                    overlay.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: true });
-                    overlay.addEventListener('touchend', this.handleTouchEnd.bind(this));
-                    
-                    // Mouse events for testing
-                    overlay.addEventListener('mousedown', this.handleMouseDown.bind(this));
-                    overlay.addEventListener('mousemove', this.handleMouseMove.bind(this));
-                    overlay.addEventListener('mouseup', this.handleMouseUp.bind(this));
-                    overlay.addEventListener('mouseleave', this.handleMouseLeave.bind(this));
-                });
-            }
-            
-            handleTouchStart(e) {
-                const touch = e.touches[0];
-                this.touchStartX = touch.clientX;
-                this.touchStartY = touch.clientY;
-                this.touchEndX = touch.clientX;
-                this.touchEndY = touch.clientY;
-                this.isSwiping = false;
-                this.swipeDirection = null;
-                this.resetCarouselInactivityTimer();
-            }
-            
-            handleTouchMove(e) {
-                if (!this.touchStartX) return;
-                
-                const touch = e.touches[0];
-                this.touchEndX = touch.clientX;
-                this.touchEndY = touch.clientY;
-                
-                // Calculate distances
-                const deltaX = this.touchStartX - this.touchEndX;
-                const deltaY = this.touchStartY - this.touchEndY;
-                
-                // Determine if this is a horizontal or vertical movement
-                if (!this.swipeDirection) {
-                    const absDeltaX = Math.abs(deltaX);
-                    const absDeltaY = Math.abs(deltaY);
-                    
-                    // If we haven't determined direction yet, check which is larger
-                    if (absDeltaX > this.verticalScrollThreshold || absDeltaY > this.verticalScrollThreshold) {
-                        this.swipeDirection = absDeltaX > absDeltaY ? 'horizontal' : 'vertical';
-                        this.isSwiping = true;
-                    }
-                }
-                
-                this.resetCarouselInactivityTimer();
-            }
-            
-            handleTouchEnd() {
-                if (!this.isSwiping) {
-                    // This was a tap, let it pass through to the iframe
-                    // We'll simulate a click on the iframe at the tap location
-                    this.simulateIframeClick();
-                } else if (this.swipeDirection === 'horizontal') {
-                    // Handle horizontal swipe
-                    this.handleCarouselSwipe();
-                }
-                // For vertical swipes, we do nothing (allow iframe scrolling)
-                
-                // Reset swipe tracking
-                this.touchStartX = 0;
-                this.touchStartY = 0;
-                this.isSwiping = false;
-                this.swipeDirection = null;
-                this.resetCarouselInactivityTimer();
-            }
-            
-            handleMouseDown(e) {
-                this.touchStartX = e.clientX;
-                this.touchStartY = e.clientY;
-                this.touchEndX = e.clientX;
-                this.touchEndY = e.clientY;
-                this.isSwiping = false;
-                this.swipeDirection = null;
-                this.resetCarouselInactivityTimer();
-            }
-            
-            handleMouseMove(e) {
-                if (!this.touchStartX) return;
-                
-                this.touchEndX = e.clientX;
-                this.touchEndY = e.clientY;
-                
-                // Calculate distances
-                const deltaX = this.touchStartX - this.touchEndX;
-                const deltaY = this.touchStartY - this.touchEndY;
-                
-                // Determine if this is a horizontal or vertical movement
-                if (!this.swipeDirection) {
-                    const absDeltaX = Math.abs(deltaX);
-                    const absDeltaY = Math.abs(deltaY);
-                    
-                    // If we haven't determined direction yet, check which is larger
-                    if (absDeltaX > this.verticalScrollThreshold || absDeltaY > this.verticalScrollThreshold) {
-                        this.swipeDirection = absDeltaX > absDeltaY ? 'horizontal' : 'vertical';
-                        this.isSwiping = true;
-                    }
-                }
-                
-                this.resetCarouselInactivityTimer();
-            }
-            
-            handleMouseUp() {
-                if (!this.isSwiping) {
-                    // This was a click, let it pass through to the iframe
-                    this.simulateIframeClick();
-                } else if (this.swipeDirection === 'horizontal') {
-                    // Handle horizontal swipe
-                    this.handleCarouselSwipe();
-                }
-                // For vertical movements, we do nothing
-                
-                // Reset swipe tracking
-                this.touchStartX = 0;
-                this.touchStartY = 0;
-                this.isSwiping = false;
-                this.swipeDirection = null;
-                this.resetCarouselInactivityTimer();
-            }
-            
-            handleMouseLeave() {
-                // If mouse leaves while dragging, cancel the swipe
-                this.touchStartX = 0;
-                this.touchStartY = 0;
-                this.isSwiping = false;
-                this.swipeDirection = null;
-            }
-            
-            simulateIframeClick() {
-                // Since we can't directly click the iframe (cross-origin restriction),
-                // we'll focus it which helps with some interactions
-                const currentSlide = this.carouselSlides[this.currentCarouselIndex];
-                const iframe = currentSlide.querySelector('iframe');
-                if (iframe) {
-                    iframe.focus();
-                }
-            }
-            
-            handleCarouselSwipe() {
-                const diff = this.touchStartX - this.touchEndX;
-                
-                if (Math.abs(diff) > this.swipeThreshold) {
-                    if (diff > 0) {
-                        // Swipe left - go to next slide
-                        this.nextCarouselSlide();
-                    } else {
-                        // Swipe right - go to previous slide
-                        this.prevCarouselSlide();
-                    }
                 }
             }
             
@@ -882,6 +727,9 @@
                     this.closeMobileCarousel();
                 });
                 
+                // Setup swipe events on the SINGLE overlay
+                this.setupSwipeEvents();
+                
                 // Keyboard navigation for carousel
                 document.addEventListener('keydown', (e) => {
                     if (this.mobileCarouselContainer.style.display === 'block') {
@@ -896,6 +744,257 @@
                         }
                     }
                 });
+            }
+            
+            setupSwipeEvents() {
+                // SIMPLE touch events on the single overlay
+                this.mobileSwipeOverlay.addEventListener('touchstart', (e) => {
+                    this.handleTouchStart(e);
+                }, { passive: true });
+                
+                this.mobileSwipeOverlay.addEventListener('touchmove', (e) => {
+                    this.handleTouchMove(e);
+                }, { passive: false }); // Need to be able to prevent default
+                
+                this.mobileSwipeOverlay.addEventListener('touchend', (e) => {
+                    this.handleTouchEnd(e);
+                }, { passive: true });
+                
+                // Mouse events for testing
+                this.mobileSwipeOverlay.addEventListener('mousedown', (e) => {
+                    this.handleMouseDown(e);
+                });
+                
+                this.mobileSwipeOverlay.addEventListener('mousemove', (e) => {
+                    this.handleMouseMove(e);
+                });
+                
+                this.mobileSwipeOverlay.addEventListener('mouseup', (e) => {
+                    this.handleMouseUp(e);
+                });
+                
+                this.mobileSwipeOverlay.addEventListener('mouseleave', () => {
+                    this.handleMouseLeave();
+                });
+            }
+            
+            handleTouchStart(e) {
+                const touch = e.touches[0];
+                this.touchStartX = touch.clientX;
+                this.touchStartY = touch.clientY;
+                this.touchEndX = touch.clientX;
+                this.touchEndY = touch.clientY;
+                this.touchStartTime = Date.now();
+                this.isSwiping = false;
+                
+                // Temporarily disable iframe pointer events
+                this.disableIframePointerEvents();
+                
+                this.resetCarouselInactivityTimer();
+            }
+            
+            handleTouchMove(e) {
+                if (!this.touchStartX) return;
+                
+                const touch = e.touches[0];
+                this.touchEndX = touch.clientX;
+                this.touchEndY = touch.clientY;
+                
+                // Calculate distances
+                const deltaX = Math.abs(this.touchStartX - this.touchEndX);
+                const deltaY = Math.abs(this.touchStartY - this.touchEndY);
+                
+                // If we're moving mostly horizontally, prevent default to stop iframe interaction
+                if (deltaX > deltaY && deltaX > 5) {
+                    e.preventDefault();
+                    this.isSwiping = true;
+                    this.mobileSwipeOverlay.classList.add('active');
+                }
+                
+                this.resetCarouselInactivityTimer();
+            }
+            
+            handleTouchEnd(e) {
+                if (!this.touchStartX) return;
+                
+                const touch = e.changedTouches[0];
+                this.touchEndX = touch.clientX;
+                this.touchEndY = touch.clientY;
+                
+                const deltaX = this.touchStartX - this.touchEndX;
+                const deltaY = this.touchStartY - this.touchEndY;
+                const deltaTime = Date.now() - this.touchStartTime;
+                
+                // Calculate absolute distances
+                const absDeltaX = Math.abs(deltaX);
+                const absDeltaY = Math.abs(deltaY);
+                
+                // Check if this was a tap (short time, small movement)
+                if (deltaTime < this.tapThreshold && 
+                    absDeltaX < this.tapMoveThreshold && 
+                    absDeltaY < this.tapMoveThreshold) {
+                    // It's a tap - re-enable iframe pointer events immediately
+                    this.enableIframePointerEvents();
+                    
+                    // Try to pass the tap through to the iframe
+                    this.passTapToIframe(touch.clientX, touch.clientY);
+                } 
+                // Check if this was a horizontal swipe
+                else if (absDeltaX > this.swipeThreshold && absDeltaX > absDeltaY) {
+                    // Horizontal swipe - handle carousel change
+                    if (deltaX > 0) {
+                        this.nextCarouselSlide();
+                    } else {
+                        this.prevCarouselSlide();
+                    }
+                }
+                
+                // Re-enable iframe pointer events with a small delay
+                setTimeout(() => {
+                    this.enableIframePointerEvents();
+                    this.mobileSwipeOverlay.classList.remove('active');
+                }, 50);
+                
+                // Reset
+                this.touchStartX = 0;
+                this.touchStartY = 0;
+                this.isSwiping = false;
+                this.resetCarouselInactivityTimer();
+            }
+            
+            handleMouseDown(e) {
+                this.touchStartX = e.clientX;
+                this.touchStartY = e.clientY;
+                this.touchEndX = e.clientX;
+                this.touchEndY = e.clientY;
+                this.touchStartTime = Date.now();
+                this.isSwiping = false;
+                
+                // Temporarily disable iframe pointer events
+                this.disableIframePointerEvents();
+                
+                this.resetCarouselInactivityTimer();
+            }
+            
+            handleMouseMove(e) {
+                if (!this.touchStartX) return;
+                
+                this.touchEndX = e.clientX;
+                this.touchEndY = e.clientY;
+                
+                // Calculate distances
+                const deltaX = Math.abs(this.touchStartX - this.touchEndX);
+                const deltaY = Math.abs(this.touchStartY - this.touchEndY);
+                
+                // If we're moving mostly horizontally, mark as swiping
+                if (deltaX > deltaY && deltaX > 5) {
+                    this.isSwiping = true;
+                    this.mobileSwipeOverlay.classList.add('active');
+                }
+                
+                this.resetCarouselInactivityTimer();
+            }
+            
+            handleMouseUp(e) {
+                if (!this.touchStartX) return;
+                
+                this.touchEndX = e.clientX;
+                this.touchEndY = e.clientY;
+                
+                const deltaX = this.touchStartX - this.touchEndX;
+                const deltaY = this.touchStartY - this.touchEndY;
+                const deltaTime = Date.now() - this.touchStartTime;
+                
+                // Calculate absolute distances
+                const absDeltaX = Math.abs(deltaX);
+                const absDeltaY = Math.abs(deltaY);
+                
+                // Check if this was a click (short time, small movement)
+                if (deltaTime < this.tapThreshold && 
+                    absDeltaX < this.tapMoveThreshold && 
+                    absDeltaY < this.tapMoveThreshold) {
+                    // It's a click - re-enable iframe pointer events immediately
+                    this.enableIframePointerEvents();
+                    
+                    // Try to pass the click through to the iframe
+                    this.passTapToIframe(e.clientX, e.clientY);
+                } 
+                // Check if this was a horizontal swipe
+                else if (absDeltaX > this.swipeThreshold && absDeltaX > absDeltaY) {
+                    // Horizontal swipe - handle carousel change
+                    if (deltaX > 0) {
+                        this.nextCarouselSlide();
+                    } else {
+                        this.prevCarouselSlide();
+                    }
+                }
+                
+                // Re-enable iframe pointer events with a small delay
+                setTimeout(() => {
+                    this.enableIframePointerEvents();
+                    this.mobileSwipeOverlay.classList.remove('active');
+                }, 50);
+                
+                // Reset
+                this.touchStartX = 0;
+                this.touchStartY = 0;
+                this.isSwiping = false;
+                this.resetCarouselInactivityTimer();
+            }
+            
+            handleMouseLeave() {
+                // If mouse leaves while down, cancel
+                this.touchStartX = 0;
+                this.touchStartY = 0;
+                this.isSwiping = false;
+                this.mobileSwipeOverlay.classList.remove('active');
+                this.enableIframePointerEvents();
+            }
+            
+            disableIframePointerEvents() {
+                // Temporarily disable pointer events on all iframes
+                const iframes = document.querySelectorAll('.mobile-carousel-iframe');
+                iframes.forEach(iframe => {
+                    iframe.style.pointerEvents = 'none';
+                });
+            }
+            
+            enableIframePointerEvents() {
+                // Re-enable pointer events on all iframes
+                const iframes = document.querySelectorAll('.mobile-carousel-iframe');
+                iframes.forEach(iframe => {
+                    iframe.style.pointerEvents = 'auto';
+                });
+            }
+            
+            passTapToIframe(x, y) {
+                // Try to simulate a click at the tap position
+                // This is limited by cross-origin restrictions, but we can try
+                const currentSlide = this.carouselSlides[this.currentCarouselIndex];
+                const iframe = currentSlide.querySelector('iframe');
+                
+                if (iframe) {
+                    // Focus the iframe which might help with some interactions
+                    iframe.focus();
+                    
+                    // Try to create a click event at the tap position
+                    // Note: This won't work cross-origin, but we try
+                    try {
+                        // Create a custom event
+                        const clickEvent = new MouseEvent('click', {
+                            view: window,
+                            bubbles: true,
+                            cancelable: true,
+                            clientX: x,
+                            clientY: y
+                        });
+                        
+                        // Dispatch it on the iframe
+                        iframe.dispatchEvent(clickEvent);
+                    } catch (e) {
+                        // Cross-origin error expected, just ignore
+                    }
+                }
             }
             
             openMobileCarousel(startIndex) {
@@ -913,6 +1012,9 @@
                 // Show carousel, hide list
                 this.mobileContainer.style.display = 'none';
                 this.mobileCarouselContainer.style.display = 'block';
+                
+                // Ensure iframe pointer events are enabled
+                this.enableIframePointerEvents();
                 
                 // Stop any cube rotation
                 this.stopAutoRotation();
@@ -962,7 +1064,7 @@
             resetCarouselInactivityTimer() {
                 // Clear existing timeout
                 if (this.carouselInactivityTimeout) {
-                    clearTimeout(this.carouselInactivityTimer);
+                    clearTimeout(this.carouselInactivityTimeout);
                 }
                 
                 if (this.carouselAutoRotateTimeout) {
