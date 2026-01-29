@@ -192,7 +192,8 @@
             font-weight: 900;
         }
 
-        .mobile-player-container {
+        /* MOBILE CAROUSEL VIEW */
+        .mobile-carousel-container {
             position: fixed;
             top: 0;
             left: 0;
@@ -206,14 +207,16 @@
             overflow: hidden;
         }
 
-        .mobile-player-header {
+        .mobile-carousel-header {
             padding: 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            position: relative;
+            z-index: 10;
         }
 
-        .mobile-player-title {
+        .mobile-carousel-title {
             color: #fff;
             font-family: Helvetica, Arial, sans-serif;
             font-size: 24px;
@@ -222,7 +225,7 @@
             flex: 1;
         }
 
-        .mobile-back-btn {
+        .mobile-carousel-back-btn {
             color: #fff;
             font-family: Helvetica, Arial, sans-serif;
             font-size: 18px;
@@ -232,17 +235,29 @@
             padding: 10px 0;
         }
 
-        .mobile-iframe-container {
+        .mobile-carousel {
+            position: relative;
             width: 100%;
             height: calc(100% - 70px);
-            padding: 20px;
+            overflow: hidden;
+        }
+
+        .mobile-carousel-track {
+            display: flex;
+            height: 100%;
+            transition: transform 0.6s ease;
+        }
+
+        .mobile-carousel-slide {
+            flex: 0 0 100%;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative;
+            padding: 20px;
         }
 
-        .mobile-player-iframe {
+        .mobile-carousel-iframe {
             width: 100%;
             height: 100%;
             max-width: 660px;
@@ -250,6 +265,34 @@
             border: none;
             background: transparent;
             border-radius: 10px;
+        }
+
+        /* Carousel indicators */
+        .mobile-carousel-indicators {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .mobile-carousel-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .mobile-carousel-indicator.active {
+            background: rgba(255, 255, 255, 0.9);
+            transform: scale(1.2);
         }
 
         /* Desktop styles - SMALLER */
@@ -299,6 +342,10 @@
                     font-size: 24px;
                     padding: 15px 0;
                 }
+                
+                .mobile-carousel-slide {
+                    padding: 15px;
+                }
             }
             
             @media (max-height: 600px) {
@@ -315,17 +362,29 @@
                     font-size: 22px;
                     padding: 12px 0;
                 }
-            }
-        }
-
-        /* Landscape mobile - Show original Apple Music player */
-        @media (max-width: 900px) and (orientation: landscape) {
-            .mobile-iframe-container {
-                padding: 10px;
+                
+                .mobile-carousel-slide {
+                    padding: 10px;
+                }
+                
+                .mobile-carousel-iframe {
+                    max-height: 380px;
+                }
             }
             
-            .mobile-player-iframe {
-                max-height: 400px;
+            /* Landscape adjustments */
+            @media (orientation: landscape) and (max-height: 500px) {
+                .mobile-carousel-slide {
+                    padding: 5px;
+                }
+                
+                .mobile-carousel-iframe {
+                    max-height: 320px;
+                }
+                
+                .mobile-carousel-indicators {
+                    bottom: 10px;
+                }
             }
         }
 
@@ -425,7 +484,7 @@
         <button class="number-btn" onclick="radioCube.rotateToFace(5)">6</button>
     </div>
     
-    <!-- Mobile Playlist List - FIXED: Radio 2 and 4 now load correct playlists -->
+    <!-- Mobile Playlist List -->
     <div class="mobile-container" id="mobileContainer">
         <div class="mobile-header">
             <div class="radio-text">RADIO</div>
@@ -440,20 +499,22 @@
         </div>
     </div>
     
-    <!-- Mobile Player View -->
-    <div class="mobile-player-container" id="mobilePlayerContainer">
-        <div class="mobile-player-header">
-            <button class="mobile-back-btn" id="mobileBackBtn">BACK</button>
-            <div class="mobile-player-title" id="mobilePlayerTitle">RADIO 1</div>
+    <!-- Mobile Carousel View -->
+    <div class="mobile-carousel-container" id="mobileCarouselContainer">
+        <div class="mobile-carousel-header">
+            <button class="mobile-carousel-back-btn" id="mobileCarouselBackBtn">BACK</button>
+            <div class="mobile-carousel-title" id="mobileCarouselTitle">RADIO 1</div>
             <div style="width: 60px;"></div>
         </div>
-        <div class="mobile-iframe-container">
-            <iframe 
-                id="mobilePlayerIframe"
-                allow="autoplay *; encrypted-media *;"
-                class="mobile-player-iframe"
-                sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
-            ></iframe>
+        
+        <div class="mobile-carousel" id="mobileCarousel">
+            <div class="mobile-carousel-track" id="mobileCarouselTrack">
+                <!-- Slides will be dynamically created here -->
+            </div>
+            
+            <div class="mobile-carousel-indicators" id="mobileCarouselIndicators">
+                <!-- Indicators will be dynamically created here -->
+            </div>
         </div>
     </div>
 
@@ -464,20 +525,23 @@
                 this.scene = document.getElementById('scene');
                 this.numberNav = document.getElementById('numberNav');
                 this.mobileContainer = document.getElementById('mobileContainer');
-                this.mobilePlayerContainer = document.getElementById('mobilePlayerContainer');
-                this.mobilePlayerIframe = document.getElementById('mobilePlayerIframe');
-                this.mobileBackBtn = document.getElementById('mobileBackBtn');
-                this.mobilePlayerTitle = document.getElementById('mobilePlayerTitle');
                 this.mobilePlaylistBtns = document.querySelectorAll('.mobile-playlist-btn');
                 
-                // Radio URLs - ORIGINAL ORDER (fixed the swap)
+                // Carousel elements
+                this.mobileCarouselContainer = document.getElementById('mobileCarouselContainer');
+                this.mobileCarouselBackBtn = document.getElementById('mobileCarouselBackBtn');
+                this.mobileCarouselTitle = document.getElementById('mobileCarouselTitle');
+                this.mobileCarouselTrack = document.getElementById('mobileCarouselTrack');
+                this.mobileCarouselIndicators = document.getElementById('mobileCarouselIndicators');
+                
+                // Radio URLs - CORRECT ORDER
                 this.radioUrls = [
-                    'https://embed.music.apple.com/de/playlist/radio-1/pl.u-55D6ZNlH65KbDqe?l=en', // 0: Radio 1
-                    'https://embed.music.apple.com/de/playlist/radio-2/pl.u-pMylgxvSWJVDZ9j?l=en', // 1: Radio 2
-                    'https://embed.music.apple.com/de/playlist/radio-3/pl.u-zPyLl9Rue01ypmo?l=en', // 2: Radio 3
-                    'https://embed.music.apple.com/de/playlist/radio-4/pl.u-qxylEY6s3maARZy?l=en', // 3: Radio 4
-                    'https://embed.music.apple.com/de/playlist/radio-5/pl.u-4JomaBmCJLE6Zg0?l=en', // 4: Radio 5
-                    'https://embed.music.apple.com/de/playlist/radio-6/pl.u-55D6Zq7I65KbDqe?l=en'  // 5: Radio 6
+                    'https://embed.music.apple.com/de/playlist/radio-1/pl.u-55D6ZNlH65KbDqe?l=en',
+                    'https://embed.music.apple.com/de/playlist/radio-2/pl.u-pMylgxvSWJVDZ9j?l=en',
+                    'https://embed.music.apple.com/de/playlist/radio-3/pl.u-zPyLl9Rue01ypmo?l=en',
+                    'https://embed.music.apple.com/de/playlist/radio-4/pl.u-qxylEY6s3maARZy?l=en',
+                    'https://embed.music.apple.com/de/playlist/radio-5/pl.u-4JomaBmCJLE6Zg0?l=en',
+                    'https://embed.music.apple.com/de/playlist/radio-6/pl.u-55D6Zq7I65KbDqe?l=en'
                 ];
                 
                 // Radio names - ALL UPPERCASE
@@ -485,7 +549,7 @@
                     'RADIO 1', 'RADIO 2', 'RADIO 3', 'RADIO 4', 'RADIO 5', 'RADIO 6'
                 ];
                 
-                // Current rotation
+                // Current rotation for desktop
                 this.currentRotation = { x: 0, y: 0 };
                 this.currentFace = 0;
                 this.isAnimating = false;
@@ -495,12 +559,20 @@
                 this.inactivityTimeout = null;
                 this.rotationDirection = 1;
                 
+                // Carousel state
+                this.currentCarouselIndex = 0;
+                this.isCarouselAnimating = false;
+                this.carouselAutoRotateTimeout = null;
+                this.carouselInactivityTimeout = null;
+                this.carouselSlides = [];
+                this.carouselIndicators = [];
+                
                 // Touch/swipe tracking
                 this.touchStartX = 0;
                 this.touchEndX = 0;
                 this.swipeThreshold = 50;
                 
-                // Face rotations - ORIGINAL: Radio 2 on left, Radio 4 on right
+                // Face rotations for desktop
                 this.faceRotations = [
                     { x: 0, y: 0 },      // 1: Front (Radio 1)
                     { x: 0, y: -90 },    // 2: Left (Radio 2)
@@ -519,6 +591,7 @@
                 this.setupEventListeners();
                 this.updateNumberButtons();
                 this.setupMobileEvents();
+                this.createCarousel();
                 
                 // Start auto-rotation after 15 seconds
                 setTimeout(() => {
@@ -527,6 +600,43 @@
                         this.startAutoRotation();
                     }
                 }, 15000);
+            }
+            
+            createCarousel() {
+                // Clear existing slides and indicators
+                this.mobileCarouselTrack.innerHTML = '';
+                this.mobileCarouselIndicators.innerHTML = '';
+                
+                // Create slides for each radio
+                for (let i = 0; i < this.radioUrls.length; i++) {
+                    // Create slide
+                    const slide = document.createElement('div');
+                    slide.className = 'mobile-carousel-slide';
+                    slide.dataset.index = i;
+                    
+                    // Create iframe
+                    const iframe = document.createElement('iframe');
+                    iframe.className = 'mobile-carousel-iframe';
+                    iframe.allow = 'autoplay *; encrypted-media *;';
+                    iframe.sandbox = 'allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation';
+                    iframe.src = this.radioUrls[i];
+                    
+                    slide.appendChild(iframe);
+                    this.mobileCarouselTrack.appendChild(slide);
+                    this.carouselSlides.push(slide);
+                    
+                    // Create indicator
+                    const indicator = document.createElement('button');
+                    indicator.className = 'mobile-carousel-indicator';
+                    if (i === 0) indicator.classList.add('active');
+                    indicator.dataset.index = i;
+                    indicator.addEventListener('click', () => {
+                        this.goToCarouselSlide(i);
+                    });
+                    
+                    this.mobileCarouselIndicators.appendChild(indicator);
+                    this.carouselIndicators.push(indicator);
+                }
             }
             
             setupEventListeners() {
@@ -558,106 +668,193 @@
                 // Mobile playlist button clicks
                 this.mobilePlaylistBtns.forEach(btn => {
                     btn.addEventListener('click', () => {
-                        const originalIndex = parseInt(btn.dataset.index);
-                        this.openMobilePlayer(originalIndex);
+                        const index = parseInt(btn.dataset.index);
+                        this.openMobileCarousel(index);
                     });
                 });
                 
-                // Mobile back button
-                this.mobileBackBtn.addEventListener('click', () => {
-                    this.closeMobilePlayer();
+                // Mobile carousel back button
+                this.mobileCarouselBackBtn.addEventListener('click', () => {
+                    this.closeMobileCarousel();
                 });
                 
-                // Touch swipe events for mobile player
-                this.mobilePlayerContainer.addEventListener('touchstart', (e) => {
+                // Touch swipe events for carousel
+                this.mobileCarouselContainer.addEventListener('touchstart', (e) => {
                     this.touchStartX = e.changedTouches[0].screenX;
+                    this.resetCarouselInactivityTimer();
                 }, { passive: true });
                 
-                this.mobilePlayerContainer.addEventListener('touchend', (e) => {
+                this.mobileCarouselContainer.addEventListener('touchmove', (e) => {
+                    this.resetCarouselInactivityTimer();
+                }, { passive: true });
+                
+                this.mobileCarouselContainer.addEventListener('touchend', (e) => {
                     this.touchEndX = e.changedTouches[0].screenX;
-                    this.handleSwipe();
+                    this.handleCarouselSwipe();
+                    this.resetCarouselInactivityTimer();
                 }, { passive: true });
                 
-                // Keyboard navigation for mobile player
+                // Mouse events for carousel
+                this.mobileCarouselContainer.addEventListener('mousedown', (e) => {
+                    this.touchStartX = e.clientX;
+                    this.resetCarouselInactivityTimer();
+                });
+                
+                this.mobileCarouselContainer.addEventListener('mouseup', (e) => {
+                    this.touchEndX = e.clientX;
+                    this.handleCarouselSwipe();
+                    this.resetCarouselInactivityTimer();
+                });
+                
+                // Click on carousel
+                this.mobileCarouselContainer.addEventListener('click', () => {
+                    this.resetCarouselInactivityTimer();
+                });
+                
+                // Keyboard navigation for carousel
                 document.addEventListener('keydown', (e) => {
-                    if (this.mobilePlayerContainer.style.display === 'block') {
+                    if (this.mobileCarouselContainer.style.display === 'block') {
                         if (e.key === 'ArrowLeft') {
-                            this.prevMobilePlaylist();
+                            this.prevCarouselSlide();
+                            this.resetCarouselInactivityTimer();
                         } else if (e.key === 'ArrowRight') {
-                            this.nextMobilePlaylist();
+                            this.nextCarouselSlide();
+                            this.resetCarouselInactivityTimer();
                         } else if (e.key === 'Escape') {
-                            this.closeMobilePlayer();
+                            this.closeMobileCarousel();
                         }
                     }
                 });
             }
             
-            handleSwipe() {
-                const diff = this.touchStartX - this.touchEndX;
-                
-                if (Math.abs(diff) > this.swipeThreshold) {
-                    if (diff > 0) {
-                        // Swipe left - go to next playlist
-                        this.nextMobilePlaylist();
-                    } else {
-                        // Swipe right - go to previous playlist
-                        this.prevMobilePlaylist();
-                    }
-                }
-            }
-            
-            openMobilePlayer(originalIndex) {
-                // Load the player
-                this.loadMobilePlayer(originalIndex);
-                
-                // Show player, hide list
-                this.mobileContainer.style.display = 'none';
-                this.mobilePlayerContainer.style.display = 'block';
-                
-                // Stop any cube rotation
-                this.stopAutoRotation();
-            }
-            
-            loadMobilePlayer(originalIndex) {
-                // Update iframe
-                this.mobilePlayerIframe.src = this.radioUrls[originalIndex];
-                
-                // Update title
-                this.mobilePlayerTitle.textContent = this.radioNames[originalIndex];
-                
-                // Update active button in the list
+            openMobileCarousel(startIndex) {
+                // Update active button in list
                 this.mobilePlaylistBtns.forEach(btn => {
                     btn.classList.remove('active');
-                    if (parseInt(btn.dataset.index) === originalIndex) {
+                    if (parseInt(btn.dataset.index) === startIndex) {
                         btn.classList.add('active');
                     }
                 });
                 
-                // Store current index
-                this.currentMobileIndex = originalIndex;
+                // Go to the correct slide
+                this.goToCarouselSlide(startIndex);
+                
+                // Show carousel, hide list
+                this.mobileContainer.style.display = 'none';
+                this.mobileCarouselContainer.style.display = 'block';
+                
+                // Stop any cube rotation
+                this.stopAutoRotation();
+                
+                // Start carousel inactivity timer
+                this.resetCarouselInactivityTimer();
             }
             
-            nextMobilePlaylist() {
-                if (this.currentMobileIndex < 5) {
-                    const nextIndex = this.currentMobileIndex + 1;
-                    this.loadMobilePlayer(nextIndex);
+            goToCarouselSlide(index) {
+                if (this.isCarouselAnimating || index < 0 || index >= this.carouselSlides.length) return;
+                
+                this.isCarouselAnimating = true;
+                this.currentCarouselIndex = index;
+                
+                // Update carousel position
+                const slideWidth = 100; // percentage
+                const translateX = -index * slideWidth;
+                this.mobileCarouselTrack.style.transform = `translateX(${translateX}%)`;
+                
+                // Update title
+                this.mobileCarouselTitle.textContent = this.radioNames[index];
+                
+                // Update indicators
+                this.carouselIndicators.forEach((indicator, i) => {
+                    indicator.classList.remove('active');
+                    if (i === index) {
+                        indicator.classList.add('active');
+                    }
+                });
+                
+                // Reset animation flag
+                setTimeout(() => {
+                    this.isCarouselAnimating = false;
+                }, 600);
+            }
+            
+            nextCarouselSlide() {
+                const nextIndex = (this.currentCarouselIndex + 1) % this.carouselSlides.length;
+                this.goToCarouselSlide(nextIndex);
+            }
+            
+            prevCarouselSlide() {
+                const prevIndex = (this.currentCarouselIndex - 1 + this.carouselSlides.length) % this.carouselSlides.length;
+                this.goToCarouselSlide(prevIndex);
+            }
+            
+            handleCarouselSwipe() {
+                const diff = this.touchStartX - this.touchEndX;
+                
+                if (Math.abs(diff) > this.swipeThreshold) {
+                    if (diff > 0) {
+                        // Swipe left - go to next slide
+                        this.nextCarouselSlide();
+                    } else {
+                        // Swipe right - go to previous slide
+                        this.prevCarouselSlide();
+                    }
                 }
             }
             
-            prevMobilePlaylist() {
-                if (this.currentMobileIndex > 0) {
-                    const prevIndex = this.currentMobileIndex - 1;
-                    this.loadMobilePlayer(prevIndex);
+            resetCarouselInactivityTimer() {
+                // Clear existing timeout
+                if (this.carouselInactivityTimeout) {
+                    clearTimeout(this.carouselInactivityTimeout);
                 }
+                
+                if (this.carouselAutoRotateTimeout) {
+                    clearTimeout(this.carouselAutoRotateTimeout);
+                }
+                
+                // Set new timeout for 15 seconds
+                this.carouselInactivityTimeout = setTimeout(() => {
+                    this.startCarouselAutoRotation();
+                }, 15000); // 15 seconds
             }
             
-            closeMobilePlayer() {
-                // Hide player, show list
-                this.mobilePlayerContainer.style.display = 'none';
+            startCarouselAutoRotation() {
+                // Stop if already rotating
+                if (this.carouselAutoRotateTimeout) return;
+                
+                const rotate = () => {
+                    if (this.mobileCarouselContainer.style.display !== 'block') {
+                        // Carousel is not visible, stop auto-rotation
+                        this.carouselAutoRotateTimeout = null;
+                        return;
+                    }
+                    
+                    // Move to next slide
+                    this.nextCarouselSlide();
+                    
+                    // Schedule next rotation (every 5 seconds)
+                    this.carouselAutoRotateTimeout = setTimeout(rotate, 5000);
+                };
+                
+                // Start rotation
+                rotate();
+            }
+            
+            closeMobileCarousel() {
+                // Hide carousel, show list
+                this.mobileCarouselContainer.style.display = 'none';
                 this.mobileContainer.style.display = 'block';
                 
-                // Clear iframe src to stop playback
-                this.mobilePlayerIframe.src = '';
+                // Stop carousel auto-rotation
+                if (this.carouselAutoRotateTimeout) {
+                    clearTimeout(this.carouselAutoRotateTimeout);
+                    this.carouselAutoRotateTimeout = null;
+                }
+                
+                if (this.carouselInactivityTimeout) {
+                    clearTimeout(this.carouselInactivityTimeout);
+                    this.carouselInactivityTimeout = null;
+                }
             }
             
             rotateToFace(targetFace) {
