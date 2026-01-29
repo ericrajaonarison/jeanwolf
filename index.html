@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio</title>
+    <title>RADIO</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            text-transform: uppercase;
         }
 
         html, body {
@@ -50,8 +51,8 @@
 
         .cube-container {
             position: relative;
-            width: 400px; /* Reduced from 500px */
-            height: 400px; /* Reduced from 500px */
+            width: 400px;
+            height: 400px;
             transform-style: preserve-3d;
             transform-origin: center center;
             transition: transform 0.6s ease;
@@ -78,7 +79,7 @@
             height: 450px;
             pointer-events: auto;
             transform-origin: center center;
-            transform: scale(0.65); /* Reduced from 0.75 */
+            transform: scale(0.65);
         }
 
         /* Flip players instantly when upside down - NO TRANSITION */
@@ -183,14 +184,12 @@
             padding: 20px 0;
             margin-bottom: 10px;
             cursor: pointer;
-            border-bottom: 2px solid #333;
-            transition: font-weight 0.2s, border-color 0.2s;
+            transition: font-weight 0.2s;
         }
 
         .mobile-playlist-btn:hover,
         .mobile-playlist-btn.active {
             font-weight: 900;
-            border-bottom: 2px solid #fff;
         }
 
         .mobile-player-container {
@@ -204,6 +203,7 @@
             display: none;
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
+            overflow: hidden;
         }
 
         .mobile-player-header {
@@ -211,7 +211,6 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 1px solid #333;
         }
 
         .mobile-player-title {
@@ -219,6 +218,8 @@
             font-family: Helvetica, Arial, sans-serif;
             font-size: 24px;
             font-weight: 400;
+            text-align: center;
+            flex: 1;
         }
 
         .mobile-back-btn {
@@ -238,6 +239,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            position: relative;
         }
 
         .mobile-player-iframe {
@@ -250,15 +252,57 @@
             border-radius: 10px;
         }
 
+        /* Swipe navigation arrows */
+        .mobile-swipe-area {
+            position: absolute;
+            top: 0;
+            width: 20%;
+            height: 100%;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.3;
+            transition: opacity 0.2s;
+        }
+
+        .mobile-swipe-area:hover {
+            opacity: 0.7;
+        }
+
+        .mobile-swipe-area.left {
+            left: 0;
+        }
+
+        .mobile-swipe-area.right {
+            right: 0;
+        }
+
+        .mobile-swipe-arrow {
+            color: #fff;
+            font-size: 40px;
+            font-weight: 900;
+            opacity: 0.7;
+        }
+
+        .mobile-swipe-area.left .mobile-swipe-arrow {
+            transform: rotate(180deg);
+            margin-left: 20px;
+        }
+
+        .mobile-swipe-area.right .mobile-swipe-arrow {
+            margin-right: 20px;
+        }
+
         /* Desktop styles - SMALLER */
         @media (min-width: 769px) {
             .cube-container {
-                width: 500px; /* Reduced from 600px */
-                height: 500px; /* Reduced from 600px */
+                width: 500px;
+                height: 500px;
             }
             
             .player-container {
-                transform: scale(0.75); /* Reduced from 0.85 */
+                transform: scale(0.75);
             }
             
             .player-container.flipped {
@@ -324,6 +368,10 @@
             
             .mobile-player-iframe {
                 max-height: 400px;
+            }
+            
+            .mobile-swipe-arrow {
+                font-size: 30px;
             }
         }
 
@@ -429,23 +477,33 @@
             <div class="radio-text">RADIO</div>
         </div>
         <div class="mobile-playlist-list">
-            <button class="mobile-playlist-btn active" data-index="0">Radio 1</button>
-            <button class="mobile-playlist-btn" data-index="1">Radio 2</button>
-            <button class="mobile-playlist-btn" data-index="2">Radio 3</button>
-            <button class="mobile-playlist-btn" data-index="3">Radio 4</button>
-            <button class="mobile-playlist-btn" data-index="4">Radio 5</button>
-            <button class="mobile-playlist-btn" data-index="5">Radio 6</button>
+            <button class="mobile-playlist-btn active" data-index="0">RADIO 1</button>
+            <button class="mobile-playlist-btn" data-index="3">RADIO 4</button>
+            <button class="mobile-playlist-btn" data-index="2">RADIO 3</button>
+            <button class="mobile-playlist-btn" data-index="1">RADIO 2</button>
+            <button class="mobile-playlist-btn" data-index="4">RADIO 5</button>
+            <button class="mobile-playlist-btn" data-index="5">RADIO 6</button>
         </div>
     </div>
     
     <!-- Mobile Player View -->
     <div class="mobile-player-container" id="mobilePlayerContainer">
         <div class="mobile-player-header">
-            <button class="mobile-back-btn" id="mobileBackBtn">← Back</button>
-            <div class="mobile-player-title" id="mobilePlayerTitle">Radio 1</div>
-            <div style="width: 60px;"></div> <!-- Spacer for alignment -->
+            <button class="mobile-back-btn" id="mobileBackBtn">←</button>
+            <div class="mobile-player-title" id="mobilePlayerTitle">RADIO 1</div>
+            <div style="width: 40px;"></div>
         </div>
         <div class="mobile-iframe-container">
+            <!-- Left swipe area -->
+            <div class="mobile-swipe-area left" id="mobileSwipeLeft">
+                <span class="mobile-swipe-arrow">▶</span>
+            </div>
+            
+            <!-- Right swipe area -->
+            <div class="mobile-swipe-area right" id="mobileSwipeRight">
+                <span class="mobile-swipe-arrow">▶</span>
+            </div>
+            
             <iframe 
                 id="mobilePlayerIframe"
                 allow="autoplay *; encrypted-media *;"
@@ -467,23 +525,28 @@
                 this.mobileBackBtn = document.getElementById('mobileBackBtn');
                 this.mobilePlayerTitle = document.getElementById('mobilePlayerTitle');
                 this.mobilePlaylistBtns = document.querySelectorAll('.mobile-playlist-btn');
+                this.mobileSwipeLeft = document.getElementById('mobileSwipeLeft');
+                this.mobileSwipeRight = document.getElementById('mobileSwipeRight');
                 
-                // Radio URLs
+                // Radio URLs - ORIGINAL ORDER (cube order)
                 this.radioUrls = [
-                    'https://embed.music.apple.com/de/playlist/radio-1/pl.u-55D6ZNlH65KbDqe?l=en',
-                    'https://embed.music.apple.com/de/playlist/radio-2/pl.u-pMylgxvSWJVDZ9j?l=en',
-                    'https://embed.music.apple.com/de/playlist/radio-3/pl.u-zPyLl9Rue01ypmo?l=en',
-                    'https://embed.music.apple.com/de/playlist/radio-4/pl.u-qxylEY6s3maARZy?l=en',
-                    'https://embed.music.apple.com/de/playlist/radio-5/pl.u-4JomaBmCJLE6Zg0?l=en',
-                    'https://embed.music.apple.com/de/playlist/radio-6/pl.u-55D6Zq7I65KbDqe?l=en'
+                    'https://embed.music.apple.com/de/playlist/radio-1/pl.u-55D6ZNlH65KbDqe?l=en', // 0: Radio 1
+                    'https://embed.music.apple.com/de/playlist/radio-2/pl.u-pMylgxvSWJVDZ9j?l=en', // 1: Radio 2
+                    'https://embed.music.apple.com/de/playlist/radio-3/pl.u-zPyLl9Rue01ypmo?l=en', // 2: Radio 3
+                    'https://embed.music.apple.com/de/playlist/radio-4/pl.u-qxylEY6s3maARZy?l=en', // 3: Radio 4
+                    'https://embed.music.apple.com/de/playlist/radio-5/pl.u-4JomaBmCJLE6Zg0?l=en', // 4: Radio 5
+                    'https://embed.music.apple.com/de/playlist/radio-6/pl.u-55D6Zq7I65KbDqe?l=en'  // 5: Radio 6
                 ];
                 
-                // Radio names
+                // Radio names - ALL UPPERCASE
                 this.radioNames = [
-                    'Radio 1', 'Radio 2', 'Radio 3', 'Radio 4', 'Radio 5', 'Radio 6'
+                    'RADIO 1', 'RADIO 2', 'RADIO 3', 'RADIO 4', 'RADIO 5', 'RADIO 6'
                 ];
                 
-                // Current rotation
+                // Mobile list order (with Radio 2 and 4 swapped)
+                this.mobileOrder = [0, 3, 2, 1, 4, 5];
+                
+                // Current state
                 this.currentRotation = { x: 0, y: 0 };
                 this.currentFace = 0;
                 this.isAnimating = false;
@@ -493,7 +556,16 @@
                 this.inactivityTimeout = null;
                 this.rotationDirection = 1;
                 
-                // Face rotations
+                // Mobile state
+                this.currentMobileIndex = 0; // Index in mobileOrder array
+                this.currentOriginalIndex = 0; // Original index in radioUrls array
+                
+                // Touch/swipe tracking
+                this.touchStartX = 0;
+                this.touchEndX = 0;
+                this.swipeThreshold = 50; // Minimum distance for a swipe
+                
+                // Face rotations - ORIGINAL: Radio 2 on left, Radio 4 on right
                 this.faceRotations = [
                     { x: 0, y: 0 },      // 1: Front (Radio 1)
                     { x: 0, y: -90 },    // 2: Left (Radio 2)
@@ -551,8 +623,8 @@
                 // Mobile playlist button clicks
                 this.mobilePlaylistBtns.forEach(btn => {
                     btn.addEventListener('click', () => {
-                        const index = parseInt(btn.dataset.index);
-                        this.openMobilePlayer(index);
+                        const originalIndex = parseInt(btn.dataset.index);
+                        this.openMobilePlayer(originalIndex);
                     });
                 });
                 
@@ -560,20 +632,61 @@
                 this.mobileBackBtn.addEventListener('click', () => {
                     this.closeMobilePlayer();
                 });
+                
+                // Swipe navigation arrows
+                this.mobileSwipeLeft.addEventListener('click', () => {
+                    this.prevMobilePlaylist();
+                });
+                
+                this.mobileSwipeRight.addEventListener('click', () => {
+                    this.nextMobilePlaylist();
+                });
+                
+                // Touch swipe events
+                this.mobilePlayerContainer.addEventListener('touchstart', (e) => {
+                    this.touchStartX = e.changedTouches[0].screenX;
+                }, { passive: true });
+                
+                this.mobilePlayerContainer.addEventListener('touchend', (e) => {
+                    this.touchEndX = e.changedTouches[0].screenX;
+                    this.handleSwipe();
+                }, { passive: true });
+                
+                // Keyboard navigation for mobile player
+                document.addEventListener('keydown', (e) => {
+                    if (this.mobilePlayerContainer.style.display === 'block') {
+                        if (e.key === 'ArrowLeft') {
+                            this.prevMobilePlaylist();
+                        } else if (e.key === 'ArrowRight') {
+                            this.nextMobilePlaylist();
+                        } else if (e.key === 'Escape') {
+                            this.closeMobilePlayer();
+                        }
+                    }
+                });
             }
             
-            openMobilePlayer(index) {
-                // Update active button
-                this.mobilePlaylistBtns.forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                this.mobilePlaylistBtns[index].classList.add('active');
+            handleSwipe() {
+                const diff = this.touchStartX - this.touchEndX;
                 
-                // Set title
-                this.mobilePlayerTitle.textContent = this.radioNames[index];
+                if (Math.abs(diff) > this.swipeThreshold) {
+                    if (diff > 0) {
+                        // Swipe left - go to next playlist
+                        this.nextMobilePlaylist();
+                    } else {
+                        // Swipe right - go to previous playlist
+                        this.prevMobilePlaylist();
+                    }
+                }
+            }
+            
+            openMobilePlayer(originalIndex) {
+                // Find position in mobile order
+                this.currentOriginalIndex = originalIndex;
+                this.currentMobileIndex = this.mobileOrder.indexOf(originalIndex);
                 
-                // Load iframe
-                this.mobilePlayerIframe.src = this.radioUrls[index];
+                // Load the player
+                this.loadMobilePlayer(originalIndex);
                 
                 // Show player, hide list
                 this.mobileContainer.style.display = 'none';
@@ -581,6 +694,42 @@
                 
                 // Stop any cube rotation
                 this.stopAutoRotation();
+            }
+            
+            loadMobilePlayer(originalIndex) {
+                // Update iframe
+                this.mobilePlayerIframe.src = this.radioUrls[originalIndex];
+                
+                // Update title
+                this.mobilePlayerTitle.textContent = this.radioNames[originalIndex];
+                
+                // Update active button in the list
+                this.mobilePlaylistBtns.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (parseInt(btn.dataset.index) === originalIndex) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // Update current indices
+                this.currentOriginalIndex = originalIndex;
+                this.currentMobileIndex = this.mobileOrder.indexOf(originalIndex);
+            }
+            
+            nextMobilePlaylist() {
+                if (this.currentMobileIndex < this.mobileOrder.length - 1) {
+                    const nextIndex = this.currentMobileIndex + 1;
+                    const originalIndex = this.mobileOrder[nextIndex];
+                    this.loadMobilePlayer(originalIndex);
+                }
+            }
+            
+            prevMobilePlaylist() {
+                if (this.currentMobileIndex > 0) {
+                    const prevIndex = this.currentMobileIndex - 1;
+                    const originalIndex = this.mobileOrder[prevIndex];
+                    this.loadMobilePlayer(originalIndex);
+                }
             }
             
             closeMobilePlayer() {
