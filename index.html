@@ -164,7 +164,6 @@
             font-size: 70px;
             margin-bottom: 20px;
             display: block;
-            /* MAKE HEADING BOLD ON MOBILE */
             font-weight: 900 !important;
             text-shadow: 0 0 1px white, 0 0 2px rgba(255, 255, 255, 0.7);
         }
@@ -269,30 +268,25 @@
             border: none;
             background: transparent;
             border-radius: 10px;
-            /* Allow pointer events only when not swiping */
             pointer-events: auto;
         }
 
-        /* Invisible swipe overlay - covers the whole carousel */
-        .mobile-swipe-overlay {
+        /* Micro-interval overlay */
+        .micro-overlay {
             position: absolute;
-            top: 70px; /* Below the header */
+            top: 70px;
             left: 0;
             width: 100%;
             height: calc(100% - 70px);
-            z-index: 5;
-            background: transparent;
-            pointer-events: auto;
+            z-index: 9999;
+            pointer-events: none;
             opacity: 0;
-            /* Prevent text selection during swipe */
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: pan-y; /* Allow vertical scrolling, but we'll handle horizontal */
+            transition: opacity 0.05s;
         }
-
-        /* Active state when swiping */
-        .mobile-swipe-overlay.active {
-            opacity: 0.01; /* Almost invisible but captures events */
+        
+        .micro-overlay.active {
+            pointer-events: auto;
+            opacity: 0.001;
         }
 
         /* Carousel indicators */
@@ -347,7 +341,6 @@
             .cube-face-bottom { transform: rotateX(-90deg) translateZ(250px); }
         }
 
-        /* Mobile styles - SHOW LIST, HIDE CUBE */
         @media (max-width: 768px) {
             .scene, .number-nav, .radio-text {
                 display: none !important;
@@ -357,7 +350,6 @@
                 display: block;
             }
             
-            /* Adjust mobile layout for different phone sizes */
             @media (max-height: 700px) {
                 .mobile-header {
                     padding-top: 80px;
@@ -401,7 +393,6 @@
                 }
             }
             
-            /* Landscape adjustments */
             @media (orientation: landscape) and (max-height: 500px) {
                 .mobile-carousel-slide {
                     padding: 5px;
@@ -417,7 +408,6 @@
             }
         }
 
-        /* Hide scrollbars */
         ::-webkit-scrollbar {
             display: none;
         }
@@ -426,10 +416,8 @@
 <body>
     <div class="radio-text">RADIO</div>
     
-    <!-- Desktop Cube View (UNCHANGED - Radio 2 on left, Radio 4 on right) -->
     <div class="scene" id="scene">
         <div class="cube-container" id="cubeContainer">
-            <!-- 1: Radio 1 -->
             <div class="cube-face cube-face-front">
                 <div class="player-container">
                     <iframe 
@@ -441,7 +429,6 @@
                 </div>
             </div>
             
-            <!-- 2: Radio 2 (ON LEFT - UNCHANGED) -->
             <div class="cube-face cube-face-left">
                 <div class="player-container">
                     <iframe 
@@ -453,7 +440,6 @@
                 </div>
             </div>
             
-            <!-- 3: Radio 3 -->
             <div class="cube-face cube-face-back">
                 <div class="player-container">
                     <iframe 
@@ -465,7 +451,6 @@
                 </div>
             </div>
             
-            <!-- 4: Radio 4 (ON RIGHT - UNCHANGED) -->
             <div class="cube-face cube-face-right">
                 <div class="player-container">
                     <iframe 
@@ -477,7 +462,6 @@
                 </div>
             </div>
             
-            <!-- 5: Radio 5 -->
             <div class="cube-face cube-face-top">
                 <div class="player-container">
                     <iframe 
@@ -489,7 +473,6 @@
                 </div>
             </div>
             
-            <!-- 6: Radio 6 -->
             <div class="cube-face cube-face-bottom">
                 <div class="player-container">
                     <iframe 
@@ -503,7 +486,6 @@
         </div>
     </div>
     
-    <!-- Desktop Number Navigation -->
     <div class="number-nav" id="numberNav">
         <button class="number-btn active" onclick="radioCube.rotateToFace(0)">1</button>
         <button class="number-btn" onclick="radioCube.rotateToFace(1)">2</button>
@@ -513,7 +495,6 @@
         <button class="number-btn" onclick="radioCube.rotateToFace(5)">6</button>
     </div>
     
-    <!-- Mobile Playlist List -->
     <div class="mobile-container" id="mobileContainer">
         <div class="mobile-header">
             <div class="radio-text">RADIO</div>
@@ -528,7 +509,6 @@
         </div>
     </div>
     
-    <!-- Mobile Carousel View -->
     <div class="mobile-carousel-container" id="mobileCarouselContainer">
         <div class="mobile-carousel-header">
             <button class="mobile-carousel-back-btn" id="mobileCarouselBackBtn">BACK</button>
@@ -537,17 +517,13 @@
         </div>
         
         <div class="mobile-carousel" id="mobileCarousel">
-            <div class="mobile-carousel-track" id="mobileCarouselTrack">
-                <!-- Slides will be dynamically created here -->
-            </div>
+            <div class="mobile-carousel-track" id="mobileCarouselTrack"></div>
             
-            <div class="mobile-carousel-indicators" id="mobileCarouselIndicators">
-                <!-- Indicators will be dynamically created here -->
-            </div>
+            <div class="mobile-carousel-indicators" id="mobileCarouselIndicators"></div>
         </div>
         
-        <!-- SINGLE invisible swipe overlay for entire carousel -->
-        <div class="mobile-swipe-overlay" id="mobileSwipeOverlay"></div>
+        <!-- Micro-interval overlay -->
+        <div class="micro-overlay" id="microOverlay"></div>
     </div>
 
     <script>
@@ -559,15 +535,13 @@
                 this.mobileContainer = document.getElementById('mobileContainer');
                 this.mobilePlaylistBtns = document.querySelectorAll('.mobile-playlist-btn');
                 
-                // Carousel elements
                 this.mobileCarouselContainer = document.getElementById('mobileCarouselContainer');
                 this.mobileCarouselBackBtn = document.getElementById('mobileCarouselBackBtn');
                 this.mobileCarouselTitle = document.getElementById('mobileCarouselTitle');
                 this.mobileCarouselTrack = document.getElementById('mobileCarouselTrack');
                 this.mobileCarouselIndicators = document.getElementById('mobileCarouselIndicators');
-                this.mobileSwipeOverlay = document.getElementById('mobileSwipeOverlay');
+                this.microOverlay = document.getElementById('microOverlay');
                 
-                // Cube radio URLs (unchanged order)
                 this.cubeRadioUrls = [
                     'https://embed.music.apple.com/de/playlist/radio-1/pl.u-55D6ZNlH65KbDqe?l=en',
                     'https://embed.music.apple.com/de/playlist/radio-2/pl.u-pMylgxvSWJVDZ9j?l=en',
@@ -577,22 +551,19 @@
                     'https://embed.music.apple.com/de/playlist/radio-6/pl.u-55D6Zq7I65KbDqe?l=en'
                 ];
                 
-                // Carousel radio URLs - SWITCHED 2 and 4
                 this.carouselRadioUrls = [
-                    'https://embed.music.apple.com/de/playlist/radio-1/pl.u-55D6ZNlH65KbDqe?l=en',  // Radio 1
-                    'https://embed.music.apple.com/de/playlist/radio-4/pl.u-qxylEY6s3maARZy?l=en',  // Radio 4 (SWITCHED - replaces Radio 2)
-                    'https://embed.music.apple.com/de/playlist/radio-3/pl.u-zPyLl9Rue01ypmo?l=en',  // Radio 3
-                    'https://embed.music.apple.com/de/playlist/radio-2/pl.u-pMylgxvSWJVDZ9j?l=en',  // Radio 2 (SWITCHED - replaces Radio 4)
-                    'https://embed.music.apple.com/de/playlist/radio-5/pl.u-4JomaBmCJLE6Zg0?l=en',  // Radio 5
-                    'https://embed.music.apple.com/de/playlist/radio-6/pl.u-55D6Zq7I65KbDqe?l=en'   // Radio 6
+                    'https://embed.music.apple.com/de/playlist/radio-1/pl.u-55D6ZNlH65KbDqe?l=en',
+                    'https://embed.music.apple.com/de/playlist/radio-4/pl.u-qxylEY6s3maARZy?l=en',
+                    'https://embed.music.apple.com/de/playlist/radio-3/pl.u-zPyLl9Rue01ypmo?l=en',
+                    'https://embed.music.apple.com/de/playlist/radio-2/pl.u-pMylgxvSWJVDZ9j?l=en',
+                    'https://embed.music.apple.com/de/playlist/radio-5/pl.u-4JomaBmCJLE6Zg0?l=en',
+                    'https://embed.music.apple.com/de/playlist/radio-6/pl.u-55D6Zq7I65KbDqe?l=en'
                 ];
                 
-                // Radio names (unchanged for both cube and carousel)
                 this.radioNames = [
                     'RADIO 1', 'RADIO 2', 'RADIO 3', 'RADIO 4', 'RADIO 5', 'RADIO 6'
                 ];
                 
-                // Current rotation for desktop
                 this.currentRotation = { x: 0, y: 0 };
                 this.currentFace = 0;
                 this.isAnimating = false;
@@ -602,7 +573,6 @@
                 this.inactivityTimeout = null;
                 this.rotationDirection = 1;
                 
-                // Carousel state
                 this.currentCarouselIndex = 0;
                 this.isCarouselAnimating = false;
                 this.carouselAutoRotateTimeout = null;
@@ -610,25 +580,28 @@
                 this.carouselSlides = [];
                 this.carouselIndicators = [];
                 
-                // Swipe tracking - SIMPLIFIED
+                // Micro-interval swipe detection
                 this.touchStartX = 0;
                 this.touchStartY = 0;
                 this.touchEndX = 0;
                 this.touchEndY = 0;
                 this.swipeThreshold = 50;
-                this.isSwiping = false;
-                this.touchStartTime = 0;
-                this.tapThreshold = 200; // ms for tap detection
-                this.tapMoveThreshold = 10; // pixels for tap detection
+                this.isTracking = false;
+                this.lastTouchTime = 0;
+                this.touchSampleRate = 4; // Sample every 4ms (250Hz)
+                this.movementHistory = [];
+                this.maxHistoryLength = 10;
+                this.isMicroOverlayActive = false;
+                this.microOverlayInterval = null;
                 
-                // Face rotations for desktop (unchanged)
+                // Face rotations
                 this.faceRotations = [
-                    { x: 0, y: 0 },      // 1: Front (Radio 1)
-                    { x: 0, y: -90 },    // 2: Left (Radio 2)
-                    { x: 0, y: 180 },    // 3: Back (Radio 3)
-                    { x: 0, y: 90 },     // 4: Right (Radio 4)
-                    { x: -90, y: 0 },    // 5: Top (Radio 5)
-                    { x: 90, y: 0 }      // 6: Bottom (Radio 6)
+                    { x: 0, y: 0 },
+                    { x: 0, y: -90 },
+                    { x: 0, y: 180 },
+                    { x: 0, y: 90 },
+                    { x: -90, y: 0 },
+                    { x: 90, y: 0 }
                 ];
                 
                 this.init();
@@ -642,7 +615,6 @@
                 this.setupMobileEvents();
                 this.createCarousel();
                 
-                // Start auto-rotation after 15 seconds
                 setTimeout(() => {
                     if (!this.hasInteracted) {
                         this.rotationDirection = -1;
@@ -652,18 +624,14 @@
             }
             
             createCarousel() {
-                // Clear existing slides and indicators
                 this.mobileCarouselTrack.innerHTML = '';
                 this.mobileCarouselIndicators.innerHTML = '';
                 
-                // Create slides for each radio using CAROUSEL URLs (with 2 and 4 switched)
                 for (let i = 0; i < this.carouselRadioUrls.length; i++) {
-                    // Create slide
                     const slide = document.createElement('div');
                     slide.className = 'mobile-carousel-slide';
                     slide.dataset.index = i;
                     
-                    // Create iframe
                     const iframe = document.createElement('iframe');
                     iframe.className = 'mobile-carousel-iframe';
                     iframe.allow = 'autoplay *; encrypted-media *;';
@@ -674,7 +642,6 @@
                     this.mobileCarouselTrack.appendChild(slide);
                     this.carouselSlides.push(slide);
                     
-                    // Create indicator
                     const indicator = document.createElement('button');
                     indicator.className = 'mobile-carousel-indicator';
                     if (i === 0) indicator.classList.add('active');
@@ -689,7 +656,6 @@
             }
             
             setupEventListeners() {
-                // Click on cube to stop auto-rotation
                 this.scene.addEventListener('click', (e) => {
                     if (e.target === this.scene || e.target.classList.contains('cube-container')) {
                         this.stopAutoRotation();
@@ -698,7 +664,6 @@
                     }
                 });
                 
-                // Keyboard navigation
                 document.addEventListener('keydown', (e) => {
                     if (e.key >= '1' && e.key <= '6') {
                         const faceIndex = parseInt(e.key) - 1;
@@ -707,14 +672,12 @@
                     }
                 });
                 
-                // Handle window resize
                 window.addEventListener('resize', () => {
                     this.updatePlayerFlipStates();
                 });
             }
             
             setupMobileEvents() {
-                // Mobile playlist button clicks
                 this.mobilePlaylistBtns.forEach(btn => {
                     btn.addEventListener('click', () => {
                         const index = parseInt(btn.dataset.index);
@@ -722,15 +685,12 @@
                     });
                 });
                 
-                // Mobile carousel back button
                 this.mobileCarouselBackBtn.addEventListener('click', () => {
                     this.closeMobileCarousel();
                 });
                 
-                // Setup swipe events on the SINGLE overlay
-                this.setupSwipeEvents();
+                this.setupMicroIntervalSwipeDetection();
                 
-                // Keyboard navigation for carousel
                 document.addEventListener('keydown', (e) => {
                     if (this.mobileCarouselContainer.style.display === 'block') {
                         if (e.key === 'ArrowLeft') {
@@ -746,259 +706,254 @@
                 });
             }
             
-            setupSwipeEvents() {
-                // SIMPLE touch events on the single overlay
-                this.mobileSwipeOverlay.addEventListener('touchstart', (e) => {
-                    this.handleTouchStart(e);
+            setupMicroIntervalSwipeDetection() {
+                // High-frequency touch sampling on the overlay
+                this.microOverlay.addEventListener('touchstart', (e) => {
+                    this.handleMicroTouchStart(e);
                 }, { passive: true });
                 
-                this.mobileSwipeOverlay.addEventListener('touchmove', (e) => {
-                    this.handleTouchMove(e);
-                }, { passive: false }); // Need to be able to prevent default
+                this.microOverlay.addEventListener('touchmove', (e) => {
+                    this.handleMicroTouchMove(e);
+                }, { passive: true });
                 
-                this.mobileSwipeOverlay.addEventListener('touchend', (e) => {
-                    this.handleTouchEnd(e);
+                this.microOverlay.addEventListener('touchend', (e) => {
+                    this.handleMicroTouchEnd(e);
                 }, { passive: true });
                 
                 // Mouse events for testing
-                this.mobileSwipeOverlay.addEventListener('mousedown', (e) => {
-                    this.handleMouseDown(e);
+                this.microOverlay.addEventListener('mousedown', (e) => {
+                    this.handleMicroMouseDown(e);
                 });
                 
-                this.mobileSwipeOverlay.addEventListener('mousemove', (e) => {
-                    this.handleMouseMove(e);
+                this.microOverlay.addEventListener('mousemove', (e) => {
+                    this.handleMicroMouseMove(e);
                 });
                 
-                this.mobileSwipeOverlay.addEventListener('mouseup', (e) => {
-                    this.handleMouseUp(e);
+                this.microOverlay.addEventListener('mouseup', (e) => {
+                    this.handleMicroMouseUp(e);
                 });
                 
-                this.mobileSwipeOverlay.addEventListener('mouseleave', () => {
-                    this.handleMouseLeave();
+                this.microOverlay.addEventListener('mouseleave', () => {
+                    this.handleMicroMouseLeave();
                 });
             }
             
-            handleTouchStart(e) {
+            handleMicroTouchStart(e) {
                 const touch = e.touches[0];
                 this.touchStartX = touch.clientX;
                 this.touchStartY = touch.clientY;
                 this.touchEndX = touch.clientX;
                 this.touchEndY = touch.clientY;
-                this.touchStartTime = Date.now();
-                this.isSwiping = false;
+                this.isTracking = true;
+                this.movementHistory = [{x: touch.clientX, y: touch.clientY, time: Date.now()}];
+                this.lastTouchTime = Date.now();
                 
-                // Temporarily disable iframe pointer events
-                this.disableIframePointerEvents();
+                // Start micro-interval sampling
+                this.startMicroOverlaySampling();
                 
                 this.resetCarouselInactivityTimer();
             }
             
-            handleTouchMove(e) {
-                if (!this.touchStartX) return;
+            handleMicroTouchMove(e) {
+                if (!this.isTracking) return;
                 
                 const touch = e.touches[0];
                 this.touchEndX = touch.clientX;
                 this.touchEndY = touch.clientY;
                 
-                // Calculate distances
-                const deltaX = Math.abs(this.touchStartX - this.touchEndX);
-                const deltaY = Math.abs(this.touchStartY - this.touchEndY);
-                
-                // If we're moving mostly horizontally, prevent default to stop iframe interaction
-                if (deltaX > deltaY && deltaX > 5) {
-                    e.preventDefault();
-                    this.isSwiping = true;
-                    this.mobileSwipeOverlay.classList.add('active');
+                // Add to movement history
+                const now = Date.now();
+                if (now - this.lastTouchTime >= this.touchSampleRate) {
+                    this.movementHistory.push({x: touch.clientX, y: touch.clientY, time: now});
+                    this.lastTouchTime = now;
+                    
+                    // Keep history limited
+                    if (this.movementHistory.length > this.maxHistoryLength) {
+                        this.movementHistory.shift();
+                    }
                 }
                 
                 this.resetCarouselInactivityTimer();
             }
             
-            handleTouchEnd(e) {
-                if (!this.touchStartX) return;
+            handleMicroTouchEnd(e) {
+                if (!this.isTracking) return;
                 
                 const touch = e.changedTouches[0];
                 this.touchEndX = touch.clientX;
                 this.touchEndY = touch.clientY;
                 
-                const deltaX = this.touchStartX - this.touchEndX;
-                const deltaY = this.touchStartY - this.touchEndY;
-                const deltaTime = Date.now() - this.touchStartTime;
+                // Stop micro-interval sampling
+                this.stopMicroOverlaySampling();
                 
-                // Calculate absolute distances
-                const absDeltaX = Math.abs(deltaX);
-                const absDeltaY = Math.abs(deltaY);
-                
-                // Check if this was a tap (short time, small movement)
-                if (deltaTime < this.tapThreshold && 
-                    absDeltaX < this.tapMoveThreshold && 
-                    absDeltaY < this.tapMoveThreshold) {
-                    // It's a tap - re-enable iframe pointer events immediately
-                    this.enableIframePointerEvents();
-                    
-                    // Try to pass the tap through to the iframe
-                    this.passTapToIframe(touch.clientX, touch.clientY);
-                } 
-                // Check if this was a horizontal swipe
-                else if (absDeltaX > this.swipeThreshold && absDeltaX > absDeltaY) {
-                    // Horizontal swipe - handle carousel change
-                    if (deltaX > 0) {
-                        this.nextCarouselSlide();
-                    } else {
-                        this.prevCarouselSlide();
-                    }
-                }
-                
-                // Re-enable iframe pointer events with a small delay
-                setTimeout(() => {
-                    this.enableIframePointerEvents();
-                    this.mobileSwipeOverlay.classList.remove('active');
-                }, 50);
+                // Analyze the gesture
+                this.analyzeMicroGesture();
                 
                 // Reset
-                this.touchStartX = 0;
-                this.touchStartY = 0;
-                this.isSwiping = false;
+                this.isTracking = false;
+                this.movementHistory = [];
                 this.resetCarouselInactivityTimer();
             }
             
-            handleMouseDown(e) {
+            handleMicroMouseDown(e) {
                 this.touchStartX = e.clientX;
                 this.touchStartY = e.clientY;
                 this.touchEndX = e.clientX;
                 this.touchEndY = e.clientY;
-                this.touchStartTime = Date.now();
-                this.isSwiping = false;
+                this.isTracking = true;
+                this.movementHistory = [{x: e.clientX, y: e.clientY, time: Date.now()}];
+                this.lastTouchTime = Date.now();
                 
-                // Temporarily disable iframe pointer events
-                this.disableIframePointerEvents();
+                // Start micro-interval sampling
+                this.startMicroOverlaySampling();
                 
                 this.resetCarouselInactivityTimer();
             }
             
-            handleMouseMove(e) {
-                if (!this.touchStartX) return;
+            handleMicroMouseMove(e) {
+                if (!this.isTracking) return;
                 
                 this.touchEndX = e.clientX;
                 this.touchEndY = e.clientY;
                 
-                // Calculate distances
-                const deltaX = Math.abs(this.touchStartX - this.touchEndX);
-                const deltaY = Math.abs(this.touchStartY - this.touchEndY);
-                
-                // If we're moving mostly horizontally, mark as swiping
-                if (deltaX > deltaY && deltaX > 5) {
-                    this.isSwiping = true;
-                    this.mobileSwipeOverlay.classList.add('active');
+                // Add to movement history
+                const now = Date.now();
+                if (now - this.lastTouchTime >= this.touchSampleRate) {
+                    this.movementHistory.push({x: e.clientX, y: e.clientY, time: now});
+                    this.lastTouchTime = now;
+                    
+                    if (this.movementHistory.length > this.maxHistoryLength) {
+                        this.movementHistory.shift();
+                    }
                 }
                 
                 this.resetCarouselInactivityTimer();
             }
             
-            handleMouseUp(e) {
-                if (!this.touchStartX) return;
+            handleMicroMouseUp(e) {
+                if (!this.isTracking) return;
                 
                 this.touchEndX = e.clientX;
                 this.touchEndY = e.clientY;
                 
-                const deltaX = this.touchStartX - this.touchEndX;
-                const deltaY = this.touchStartY - this.touchEndY;
-                const deltaTime = Date.now() - this.touchStartTime;
+                // Stop micro-interval sampling
+                this.stopMicroOverlaySampling();
                 
-                // Calculate absolute distances
-                const absDeltaX = Math.abs(deltaX);
-                const absDeltaY = Math.abs(deltaY);
+                // Analyze the gesture
+                this.analyzeMicroGesture();
                 
-                // Check if this was a click (short time, small movement)
-                if (deltaTime < this.tapThreshold && 
-                    absDeltaX < this.tapMoveThreshold && 
-                    absDeltaY < this.tapMoveThreshold) {
-                    // It's a click - re-enable iframe pointer events immediately
-                    this.enableIframePointerEvents();
-                    
-                    // Try to pass the click through to the iframe
-                    this.passTapToIframe(e.clientX, e.clientY);
-                } 
-                // Check if this was a horizontal swipe
-                else if (absDeltaX > this.swipeThreshold && absDeltaX > absDeltaY) {
-                    // Horizontal swipe - handle carousel change
+                // Reset
+                this.isTracking = false;
+                this.movementHistory = [];
+                this.resetCarouselInactivityTimer();
+            }
+            
+            handleMicroMouseLeave() {
+                if (this.isTracking) {
+                    this.stopMicroOverlaySampling();
+                    this.isTracking = false;
+                    this.movementHistory = [];
+                }
+            }
+            
+            startMicroOverlaySampling() {
+                // Clear any existing interval
+                if (this.microOverlayInterval) {
+                    clearInterval(this.microOverlayInterval);
+                }
+                
+                // Activate overlay
+                this.microOverlay.classList.add('active');
+                this.isMicroOverlayActive = true;
+                
+                // Start rapid toggling at 60fps (16ms)
+                this.microOverlayInterval = setInterval(() => {
+                    // Toggle overlay on/off very fast
+                    if (this.isTracking) {
+                        // Keep active while tracking
+                        this.microOverlay.classList.add('active');
+                    } else {
+                        // Flash on/off to sample input
+                        this.microOverlay.classList.toggle('active');
+                    }
+                }, 8); // 8ms = ~120Hz sampling
+            }
+            
+            stopMicroOverlaySampling() {
+                if (this.microOverlayInterval) {
+                    clearInterval(this.microOverlayInterval);
+                    this.microOverlayInterval = null;
+                }
+                this.microOverlay.classList.remove('active');
+                this.isMicroOverlayActive = false;
+            }
+            
+            analyzeMicroGesture() {
+                if (this.movementHistory.length < 2) {
+                    // Not enough data, treat as tap
+                    this.handleMicroTap();
+                    return;
+                }
+                
+                // Calculate movement characteristics
+                const first = this.movementHistory[0];
+                const last = this.movementHistory[this.movementHistory.length - 1];
+                const deltaX = last.x - first.x;
+                const deltaY = last.y - first.y;
+                const timeDiff = last.time - first.time;
+                
+                // Calculate velocity
+                const velocityX = Math.abs(deltaX) / timeDiff;
+                const velocityY = Math.abs(deltaY) / timeDiff;
+                
+                // Calculate total distance
+                const totalDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                
+                // Determine if it's a swipe or tap
+                if (totalDistance < 20 && timeDiff < 300) {
+                    // Small movement, short time = tap
+                    this.handleMicroTap();
+                } else if (Math.abs(deltaX) > this.swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
+                    // Horizontal swipe
                     if (deltaX > 0) {
                         this.nextCarouselSlide();
                     } else {
                         this.prevCarouselSlide();
                     }
+                } else if (Math.abs(deltaY) > this.swipeThreshold && Math.abs(deltaY) > Math.abs(deltaX)) {
+                    // Vertical movement - ignore for carousel
+                    this.handleMicroTap();
+                } else {
+                    // Not clear, treat as tap
+                    this.handleMicroTap();
                 }
-                
-                // Re-enable iframe pointer events with a small delay
-                setTimeout(() => {
-                    this.enableIframePointerEvents();
-                    this.mobileSwipeOverlay.classList.remove('active');
-                }, 50);
-                
-                // Reset
-                this.touchStartX = 0;
-                this.touchStartY = 0;
-                this.isSwiping = false;
-                this.resetCarouselInactivityTimer();
             }
             
-            handleMouseLeave() {
-                // If mouse leaves while down, cancel
-                this.touchStartX = 0;
-                this.touchStartY = 0;
-                this.isSwiping = false;
-                this.mobileSwipeOverlay.classList.remove('active');
-                this.enableIframePointerEvents();
-            }
-            
-            disableIframePointerEvents() {
-                // Temporarily disable pointer events on all iframes
-                const iframes = document.querySelectorAll('.mobile-carousel-iframe');
-                iframes.forEach(iframe => {
-                    iframe.style.pointerEvents = 'none';
-                });
-            }
-            
-            enableIframePointerEvents() {
-                // Re-enable pointer events on all iframes
-                const iframes = document.querySelectorAll('.mobile-carousel-iframe');
-                iframes.forEach(iframe => {
-                    iframe.style.pointerEvents = 'auto';
-                });
-            }
-            
-            passTapToIframe(x, y) {
-                // Try to simulate a click at the tap position
-                // This is limited by cross-origin restrictions, but we can try
+            handleMicroTap() {
+                // For a tap, we want to pass it through to the iframe
+                // We can't directly click due to cross-origin, but we can try to focus
                 const currentSlide = this.carouselSlides[this.currentCarouselIndex];
                 const iframe = currentSlide.querySelector('iframe');
-                
                 if (iframe) {
-                    // Focus the iframe which might help with some interactions
                     iframe.focus();
                     
-                    // Try to create a click event at the tap position
-                    // Note: This won't work cross-origin, but we try
+                    // Try to dispatch a click event at the tap position
                     try {
-                        // Create a custom event
                         const clickEvent = new MouseEvent('click', {
                             view: window,
                             bubbles: true,
                             cancelable: true,
-                            clientX: x,
-                            clientY: y
+                            clientX: this.touchEndX,
+                            clientY: this.touchEndY
                         });
-                        
-                        // Dispatch it on the iframe
                         iframe.dispatchEvent(clickEvent);
                     } catch (e) {
-                        // Cross-origin error expected, just ignore
+                        // Cross-origin error expected
                     }
                 }
             }
             
             openMobileCarousel(startIndex) {
-                // Update active button in list
                 this.mobilePlaylistBtns.forEach(btn => {
                     btn.classList.remove('active');
                     if (parseInt(btn.dataset.index) === startIndex) {
@@ -1006,20 +961,13 @@
                     }
                 });
                 
-                // Go to the correct slide
                 this.goToCarouselSlide(startIndex);
                 
-                // Show carousel, hide list
                 this.mobileContainer.style.display = 'none';
                 this.mobileCarouselContainer.style.display = 'block';
                 
-                // Ensure iframe pointer events are enabled
-                this.enableIframePointerEvents();
-                
-                // Stop any cube rotation
                 this.stopAutoRotation();
                 
-                // Start carousel inactivity timer
                 this.resetCarouselInactivityTimer();
             }
             
@@ -1029,15 +977,12 @@
                 this.isCarouselAnimating = true;
                 this.currentCarouselIndex = index;
                 
-                // Update carousel position
-                const slideWidth = 100; // percentage
+                const slideWidth = 100;
                 const translateX = -index * slideWidth;
                 this.mobileCarouselTrack.style.transform = `translateX(${translateX}%)`;
                 
-                // Update title (use original radio names, not switched)
                 this.mobileCarouselTitle.textContent = this.radioNames[index];
                 
-                // Update indicators
                 this.carouselIndicators.forEach((indicator, i) => {
                     indicator.classList.remove('active');
                     if (i === index) {
@@ -1045,7 +990,6 @@
                     }
                 });
                 
-                // Reset animation flag
                 setTimeout(() => {
                     this.isCarouselAnimating = false;
                 }, 600);
@@ -1062,7 +1006,6 @@
             }
             
             resetCarouselInactivityTimer() {
-                // Clear existing timeout
                 if (this.carouselInactivityTimeout) {
                     clearTimeout(this.carouselInactivityTimeout);
                 }
@@ -1071,40 +1014,32 @@
                     clearTimeout(this.carouselAutoRotateTimeout);
                 }
                 
-                // Set new timeout for 15 seconds
                 this.carouselInactivityTimeout = setTimeout(() => {
                     this.startCarouselAutoRotation();
-                }, 15000); // 15 seconds
+                }, 15000);
             }
             
             startCarouselAutoRotation() {
-                // Stop if already rotating
                 if (this.carouselAutoRotateTimeout) return;
                 
                 const rotate = () => {
                     if (this.mobileCarouselContainer.style.display !== 'block') {
-                        // Carousel is not visible, stop auto-rotation
                         this.carouselAutoRotateTimeout = null;
                         return;
                     }
                     
-                    // Move to next slide
                     this.nextCarouselSlide();
                     
-                    // Schedule next rotation (every 5 seconds)
                     this.carouselAutoRotateTimeout = setTimeout(rotate, 5000);
                 };
                 
-                // Start rotation
                 rotate();
             }
             
             closeMobileCarousel() {
-                // Hide carousel, show list
                 this.mobileCarouselContainer.style.display = 'none';
                 this.mobileContainer.style.display = 'block';
                 
-                // Stop carousel auto-rotation
                 if (this.carouselAutoRotateTimeout) {
                     clearTimeout(this.carouselAutoRotateTimeout);
                     this.carouselAutoRotateTimeout = null;
@@ -1114,6 +1049,9 @@
                     clearTimeout(this.carouselInactivityTimeout);
                     this.carouselInactivityTimeout = null;
                 }
+                
+                // Stop micro overlay sampling
+                this.stopMicroOverlaySampling();
             }
             
             rotateToFace(targetFace) {
@@ -1331,12 +1269,10 @@
             }
         }
         
-        // Initialize when page loads
         window.addEventListener('load', () => {
             window.radioCube = new RadioCube();
         });
         
-        // Handle page visibility
         document.addEventListener('visibilitychange', () => {
             if (window.radioCube && document.hidden) {
                 window.radioCube.stopAutoRotation();
