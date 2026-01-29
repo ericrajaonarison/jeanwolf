@@ -252,48 +252,6 @@
             border-radius: 10px;
         }
 
-        /* Swipe navigation arrows */
-        .mobile-swipe-area {
-            position: absolute;
-            top: 0;
-            width: 20%;
-            height: 100%;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0.3;
-            transition: opacity 0.2s;
-        }
-
-        .mobile-swipe-area:hover {
-            opacity: 0.7;
-        }
-
-        .mobile-swipe-area.left {
-            left: 0;
-        }
-
-        .mobile-swipe-area.right {
-            right: 0;
-        }
-
-        .mobile-swipe-arrow {
-            color: #fff;
-            font-size: 40px;
-            font-weight: 900;
-            opacity: 0.7;
-        }
-
-        .mobile-swipe-area.left .mobile-swipe-arrow {
-            transform: rotate(180deg);
-            margin-left: 20px;
-        }
-
-        .mobile-swipe-area.right .mobile-swipe-arrow {
-            margin-right: 20px;
-        }
-
         /* Desktop styles - SMALLER */
         @media (min-width: 769px) {
             .cube-container {
@@ -368,10 +326,6 @@
             
             .mobile-player-iframe {
                 max-height: 400px;
-            }
-            
-            .mobile-swipe-arrow {
-                font-size: 30px;
             }
         }
 
@@ -471,16 +425,16 @@
         <button class="number-btn" onclick="radioCube.rotateToFace(5)">6</button>
     </div>
     
-    <!-- Mobile Playlist List -->
+    <!-- Mobile Playlist List - FIXED: Radio 2 and 4 now load correct playlists -->
     <div class="mobile-container" id="mobileContainer">
         <div class="mobile-header">
             <div class="radio-text">RADIO</div>
         </div>
         <div class="mobile-playlist-list">
             <button class="mobile-playlist-btn active" data-index="0">RADIO 1</button>
-            <button class="mobile-playlist-btn" data-index="3">RADIO 4</button>
-            <button class="mobile-playlist-btn" data-index="2">RADIO 3</button>
             <button class="mobile-playlist-btn" data-index="1">RADIO 2</button>
+            <button class="mobile-playlist-btn" data-index="2">RADIO 3</button>
+            <button class="mobile-playlist-btn" data-index="3">RADIO 4</button>
             <button class="mobile-playlist-btn" data-index="4">RADIO 5</button>
             <button class="mobile-playlist-btn" data-index="5">RADIO 6</button>
         </div>
@@ -489,21 +443,11 @@
     <!-- Mobile Player View -->
     <div class="mobile-player-container" id="mobilePlayerContainer">
         <div class="mobile-player-header">
-            <button class="mobile-back-btn" id="mobileBackBtn">←</button>
+            <button class="mobile-back-btn" id="mobileBackBtn">BACK</button>
             <div class="mobile-player-title" id="mobilePlayerTitle">RADIO 1</div>
-            <div style="width: 40px;"></div>
+            <div style="width: 60px;"></div>
         </div>
         <div class="mobile-iframe-container">
-            <!-- Left swipe area -->
-            <div class="mobile-swipe-area left" id="mobileSwipeLeft">
-                <span class="mobile-swipe-arrow">▶</span>
-            </div>
-            
-            <!-- Right swipe area -->
-            <div class="mobile-swipe-area right" id="mobileSwipeRight">
-                <span class="mobile-swipe-arrow">▶</span>
-            </div>
-            
             <iframe 
                 id="mobilePlayerIframe"
                 allow="autoplay *; encrypted-media *;"
@@ -525,10 +469,8 @@
                 this.mobileBackBtn = document.getElementById('mobileBackBtn');
                 this.mobilePlayerTitle = document.getElementById('mobilePlayerTitle');
                 this.mobilePlaylistBtns = document.querySelectorAll('.mobile-playlist-btn');
-                this.mobileSwipeLeft = document.getElementById('mobileSwipeLeft');
-                this.mobileSwipeRight = document.getElementById('mobileSwipeRight');
                 
-                // Radio URLs - ORIGINAL ORDER (cube order)
+                // Radio URLs - ORIGINAL ORDER (fixed the swap)
                 this.radioUrls = [
                     'https://embed.music.apple.com/de/playlist/radio-1/pl.u-55D6ZNlH65KbDqe?l=en', // 0: Radio 1
                     'https://embed.music.apple.com/de/playlist/radio-2/pl.u-pMylgxvSWJVDZ9j?l=en', // 1: Radio 2
@@ -543,10 +485,7 @@
                     'RADIO 1', 'RADIO 2', 'RADIO 3', 'RADIO 4', 'RADIO 5', 'RADIO 6'
                 ];
                 
-                // Mobile list order (with Radio 2 and 4 swapped)
-                this.mobileOrder = [0, 3, 2, 1, 4, 5];
-                
-                // Current state
+                // Current rotation
                 this.currentRotation = { x: 0, y: 0 };
                 this.currentFace = 0;
                 this.isAnimating = false;
@@ -556,14 +495,10 @@
                 this.inactivityTimeout = null;
                 this.rotationDirection = 1;
                 
-                // Mobile state
-                this.currentMobileIndex = 0; // Index in mobileOrder array
-                this.currentOriginalIndex = 0; // Original index in radioUrls array
-                
                 // Touch/swipe tracking
                 this.touchStartX = 0;
                 this.touchEndX = 0;
-                this.swipeThreshold = 50; // Minimum distance for a swipe
+                this.swipeThreshold = 50;
                 
                 // Face rotations - ORIGINAL: Radio 2 on left, Radio 4 on right
                 this.faceRotations = [
@@ -633,16 +568,7 @@
                     this.closeMobilePlayer();
                 });
                 
-                // Swipe navigation arrows
-                this.mobileSwipeLeft.addEventListener('click', () => {
-                    this.prevMobilePlaylist();
-                });
-                
-                this.mobileSwipeRight.addEventListener('click', () => {
-                    this.nextMobilePlaylist();
-                });
-                
-                // Touch swipe events
+                // Touch swipe events for mobile player
                 this.mobilePlayerContainer.addEventListener('touchstart', (e) => {
                     this.touchStartX = e.changedTouches[0].screenX;
                 }, { passive: true });
@@ -681,10 +607,6 @@
             }
             
             openMobilePlayer(originalIndex) {
-                // Find position in mobile order
-                this.currentOriginalIndex = originalIndex;
-                this.currentMobileIndex = this.mobileOrder.indexOf(originalIndex);
-                
                 // Load the player
                 this.loadMobilePlayer(originalIndex);
                 
@@ -711,24 +633,21 @@
                     }
                 });
                 
-                // Update current indices
-                this.currentOriginalIndex = originalIndex;
-                this.currentMobileIndex = this.mobileOrder.indexOf(originalIndex);
+                // Store current index
+                this.currentMobileIndex = originalIndex;
             }
             
             nextMobilePlaylist() {
-                if (this.currentMobileIndex < this.mobileOrder.length - 1) {
+                if (this.currentMobileIndex < 5) {
                     const nextIndex = this.currentMobileIndex + 1;
-                    const originalIndex = this.mobileOrder[nextIndex];
-                    this.loadMobilePlayer(originalIndex);
+                    this.loadMobilePlayer(nextIndex);
                 }
             }
             
             prevMobilePlaylist() {
                 if (this.currentMobileIndex > 0) {
                     const prevIndex = this.currentMobileIndex - 1;
-                    const originalIndex = this.mobileOrder[prevIndex];
-                    this.loadMobilePlayer(originalIndex);
+                    this.loadMobilePlayer(prevIndex);
                 }
             }
             
