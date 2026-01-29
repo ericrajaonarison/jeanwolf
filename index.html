@@ -271,22 +271,60 @@
             pointer-events: auto;
         }
 
-        /* Micro-interval overlay */
-        .micro-overlay {
+        /* Grid overlay for swipe detection */
+        .grid-overlay {
             position: absolute;
-            top: 70px;
+            top: 0;
             left: 0;
             width: 100%;
-            height: calc(100% - 70px);
-            z-index: 9999;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.05s;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none; /* Initially off, only lines will have events */
         }
-        
-        .micro-overlay.active {
+
+        /* Grid lines - these capture swipes */
+        .grid-line {
+            position: absolute;
+            background: transparent;
             pointer-events: auto;
-            opacity: 0.001;
+            opacity: 0;
+        }
+
+        /* Horizontal lines (for vertical swipe detection) */
+        .grid-line.horizontal {
+            width: 100%;
+            height: 10px; /* Thick enough to catch swipes */
+            left: 0;
+        }
+
+        /* Vertical lines (for horizontal swipe detection) */
+        .grid-line.vertical {
+            height: 100%;
+            width: 10px; /* Thick enough to catch swipes */
+            top: 0;
+        }
+
+        /* We'll create a grid with 20px spacing */
+        /* First horizontal line at 20% from top */
+        .grid-line.horizontal.line-1 { top: 20%; }
+        .grid-line.horizontal.line-2 { top: 40%; }
+        .grid-line.horizontal.line-3 { top: 60%; }
+        .grid-line.horizontal.line-4 { top: 80%; }
+
+        /* Vertical lines at key positions */
+        .grid-line.vertical.line-1 { left: 20%; }
+        .grid-line.vertical.line-2 { left: 40%; }
+        .grid-line.vertical.line-3 { left: 60%; }
+        .grid-line.vertical.line-4 { left: 80%; }
+
+        /* Center cross for better swipe detection */
+        .grid-line.center-horizontal { 
+            top: 50%; 
+            transform: translateY(-5px);
+        }
+        .grid-line.center-vertical { 
+            left: 50%; 
+            transform: translateX(-5px);
         }
 
         /* Carousel indicators */
@@ -522,8 +560,22 @@
             <div class="mobile-carousel-indicators" id="mobileCarouselIndicators"></div>
         </div>
         
-        <!-- Micro-interval overlay -->
-        <div class="micro-overlay" id="microOverlay"></div>
+        <!-- Grid overlay for swipe detection -->
+        <div class="grid-overlay" id="gridOverlay">
+            <!-- Horizontal lines for vertical swipes (if needed) -->
+            <div class="grid-line horizontal line-1"></div>
+            <div class="grid-line horizontal line-2"></div>
+            <div class="grid-line horizontal line-3"></div>
+            <div class="grid-line horizontal line-4"></div>
+            <div class="grid-line horizontal center-horizontal"></div>
+            
+            <!-- Vertical lines for horizontal swipes -->
+            <div class="grid-line vertical line-1"></div>
+            <div class="grid-line vertical line-2"></div>
+            <div class="grid-line vertical line-3"></div>
+            <div class="grid-line vertical line-4"></div>
+            <div class="grid-line vertical center-vertical"></div>
+        </div>
     </div>
 
     <script>
@@ -540,7 +592,7 @@
                 this.mobileCarouselTitle = document.getElementById('mobileCarouselTitle');
                 this.mobileCarouselTrack = document.getElementById('mobileCarouselTrack');
                 this.mobileCarouselIndicators = document.getElementById('mobileCarouselIndicators');
-                this.microOverlay = document.getElementById('microOverlay');
+                this.gridOverlay = document.getElementById('gridOverlay');
                 
                 this.cubeRadioUrls = [
                     'https://embed.music.apple.com/de/playlist/radio-1/pl.u-55D6ZNlH65KbDqe?l=en',
@@ -580,19 +632,16 @@
                 this.carouselSlides = [];
                 this.carouselIndicators = [];
                 
-                // Micro-interval swipe detection
+                // Grid swipe tracking
                 this.touchStartX = 0;
                 this.touchStartY = 0;
                 this.touchEndX = 0;
                 this.touchEndY = 0;
                 this.swipeThreshold = 50;
-                this.isTracking = false;
-                this.lastTouchTime = 0;
-                this.touchSampleRate = 4; // Sample every 4ms (250Hz)
-                this.movementHistory = [];
-                this.maxHistoryLength = 10;
-                this.isMicroOverlayActive = false;
-                this.microOverlayInterval = null;
+                this.isSwiping = false;
+                this.swipeStartTime = 0;
+                this.tapThreshold = 200; // ms
+                this.gridLines = [];
                 
                 // Face rotations
                 this.faceRotations = [
@@ -653,6 +702,9 @@
                     this.mobileCarouselIndicators.appendChild(indicator);
                     this.carouselIndicators.push(indicator);
                 }
+                
+                // Collect all grid lines
+                this.gridLines = Array.from(this.gridOverlay.querySelectorAll('.grid-line'));
             }
             
             setupEventListeners() {
@@ -689,7 +741,7 @@
                     this.closeMobileCarousel();
                 });
                 
-                this.setupMicroIntervalSwipeDetection();
+                this.setupGridSwipeDetection();
                 
                 document.addEventListener('keydown', (e) => {
                     if (this.mobileCarouselContainer.style.display === 'block') {
@@ -706,251 +758,167 @@
                 });
             }
             
-            setupMicroIntervalSwipeDetection() {
-                // High-frequency touch sampling on the overlay
-                this.microOverlay.addEventListener('touchstart', (e) => {
-                    this.handleMicroTouchStart(e);
-                }, { passive: true });
-                
-                this.microOverlay.addEventListener('touchmove', (e) => {
-                    this.handleMicroTouchMove(e);
-                }, { passive: true });
-                
-                this.microOverlay.addEventListener('touchend', (e) => {
-                    this.handleMicroTouchEnd(e);
-                }, { passive: true });
-                
-                // Mouse events for testing
-                this.microOverlay.addEventListener('mousedown', (e) => {
-                    this.handleMicroMouseDown(e);
-                });
-                
-                this.microOverlay.addEventListener('mousemove', (e) => {
-                    this.handleMicroMouseMove(e);
-                });
-                
-                this.microOverlay.addEventListener('mouseup', (e) => {
-                    this.handleMicroMouseUp(e);
-                });
-                
-                this.microOverlay.addEventListener('mouseleave', () => {
-                    this.handleMicroMouseLeave();
+            setupGridSwipeDetection() {
+                // Add event listeners to all grid lines
+                this.gridLines.forEach(line => {
+                    line.addEventListener('touchstart', (e) => {
+                        this.handleGridTouchStart(e);
+                    }, { passive: true });
+                    
+                    line.addEventListener('touchmove', (e) => {
+                        this.handleGridTouchMove(e);
+                    }, { passive: true });
+                    
+                    line.addEventListener('touchend', (e) => {
+                        this.handleGridTouchEnd(e);
+                    }, { passive: true });
+                    
+                    // Mouse events for testing
+                    line.addEventListener('mousedown', (e) => {
+                        this.handleGridMouseDown(e);
+                    });
+                    
+                    line.addEventListener('mousemove', (e) => {
+                        this.handleGridMouseMove(e);
+                    });
+                    
+                    line.addEventListener('mouseup', (e) => {
+                        this.handleGridMouseUp(e);
+                    });
+                    
+                    line.addEventListener('mouseleave', () => {
+                        this.handleGridMouseLeave();
+                    });
                 });
             }
             
-            handleMicroTouchStart(e) {
+            handleGridTouchStart(e) {
                 const touch = e.touches[0];
                 this.touchStartX = touch.clientX;
                 this.touchStartY = touch.clientY;
                 this.touchEndX = touch.clientX;
                 this.touchEndY = touch.clientY;
-                this.isTracking = true;
-                this.movementHistory = [{x: touch.clientX, y: touch.clientY, time: Date.now()}];
-                this.lastTouchTime = Date.now();
-                
-                // Start micro-interval sampling
-                this.startMicroOverlaySampling();
+                this.swipeStartTime = Date.now();
+                this.isSwiping = false;
                 
                 this.resetCarouselInactivityTimer();
             }
             
-            handleMicroTouchMove(e) {
-                if (!this.isTracking) return;
+            handleGridTouchMove(e) {
+                if (!this.touchStartX) return;
                 
                 const touch = e.touches[0];
                 this.touchEndX = touch.clientX;
                 this.touchEndY = touch.clientY;
                 
-                // Add to movement history
-                const now = Date.now();
-                if (now - this.lastTouchTime >= this.touchSampleRate) {
-                    this.movementHistory.push({x: touch.clientX, y: touch.clientY, time: now});
-                    this.lastTouchTime = now;
-                    
-                    // Keep history limited
-                    if (this.movementHistory.length > this.maxHistoryLength) {
-                        this.movementHistory.shift();
-                    }
+                // Calculate movement
+                const deltaX = Math.abs(this.touchStartX - this.touchEndX);
+                const deltaY = Math.abs(this.touchStartY - this.touchEndY);
+                
+                // If we're moving more than 10px in any direction, we're swiping
+                if (deltaX > 10 || deltaY > 10) {
+                    this.isSwiping = true;
                 }
                 
                 this.resetCarouselInactivityTimer();
             }
             
-            handleMicroTouchEnd(e) {
-                if (!this.isTracking) return;
+            handleGridTouchEnd(e) {
+                if (!this.touchStartX) return;
                 
                 const touch = e.changedTouches[0];
                 this.touchEndX = touch.clientX;
                 this.touchEndY = touch.clientY;
                 
-                // Stop micro-interval sampling
-                this.stopMicroOverlaySampling();
+                const deltaX = this.touchStartX - this.touchEndX;
+                const deltaY = this.touchStartY - this.touchEndY;
+                const deltaTime = Date.now() - this.swipeStartTime;
                 
-                // Analyze the gesture
-                this.analyzeMicroGesture();
+                // Calculate absolute distances
+                const absDeltaX = Math.abs(deltaX);
+                const absDeltaY = Math.abs(deltaY);
                 
-                // Reset
-                this.isTracking = false;
-                this.movementHistory = [];
-                this.resetCarouselInactivityTimer();
-            }
-            
-            handleMicroMouseDown(e) {
-                this.touchStartX = e.clientX;
-                this.touchStartY = e.clientY;
-                this.touchEndX = e.clientX;
-                this.touchEndY = e.clientY;
-                this.isTracking = true;
-                this.movementHistory = [{x: e.clientX, y: e.clientY, time: Date.now()}];
-                this.lastTouchTime = Date.now();
-                
-                // Start micro-interval sampling
-                this.startMicroOverlaySampling();
-                
-                this.resetCarouselInactivityTimer();
-            }
-            
-            handleMicroMouseMove(e) {
-                if (!this.isTracking) return;
-                
-                this.touchEndX = e.clientX;
-                this.touchEndY = e.clientY;
-                
-                // Add to movement history
-                const now = Date.now();
-                if (now - this.lastTouchTime >= this.touchSampleRate) {
-                    this.movementHistory.push({x: e.clientX, y: e.clientY, time: now});
-                    this.lastTouchTime = now;
-                    
-                    if (this.movementHistory.length > this.maxHistoryLength) {
-                        this.movementHistory.shift();
-                    }
-                }
-                
-                this.resetCarouselInactivityTimer();
-            }
-            
-            handleMicroMouseUp(e) {
-                if (!this.isTracking) return;
-                
-                this.touchEndX = e.clientX;
-                this.touchEndY = e.clientY;
-                
-                // Stop micro-interval sampling
-                this.stopMicroOverlaySampling();
-                
-                // Analyze the gesture
-                this.analyzeMicroGesture();
-                
-                // Reset
-                this.isTracking = false;
-                this.movementHistory = [];
-                this.resetCarouselInactivityTimer();
-            }
-            
-            handleMicroMouseLeave() {
-                if (this.isTracking) {
-                    this.stopMicroOverlaySampling();
-                    this.isTracking = false;
-                    this.movementHistory = [];
-                }
-            }
-            
-            startMicroOverlaySampling() {
-                // Clear any existing interval
-                if (this.microOverlayInterval) {
-                    clearInterval(this.microOverlayInterval);
-                }
-                
-                // Activate overlay
-                this.microOverlay.classList.add('active');
-                this.isMicroOverlayActive = true;
-                
-                // Start rapid toggling at 60fps (16ms)
-                this.microOverlayInterval = setInterval(() => {
-                    // Toggle overlay on/off very fast
-                    if (this.isTracking) {
-                        // Keep active while tracking
-                        this.microOverlay.classList.add('active');
-                    } else {
-                        // Flash on/off to sample input
-                        this.microOverlay.classList.toggle('active');
-                    }
-                }, 8); // 8ms = ~120Hz sampling
-            }
-            
-            stopMicroOverlaySampling() {
-                if (this.microOverlayInterval) {
-                    clearInterval(this.microOverlayInterval);
-                    this.microOverlayInterval = null;
-                }
-                this.microOverlay.classList.remove('active');
-                this.isMicroOverlayActive = false;
-            }
-            
-            analyzeMicroGesture() {
-                if (this.movementHistory.length < 2) {
-                    // Not enough data, treat as tap
-                    this.handleMicroTap();
-                    return;
-                }
-                
-                // Calculate movement characteristics
-                const first = this.movementHistory[0];
-                const last = this.movementHistory[this.movementHistory.length - 1];
-                const deltaX = last.x - first.x;
-                const deltaY = last.y - first.y;
-                const timeDiff = last.time - first.time;
-                
-                // Calculate velocity
-                const velocityX = Math.abs(deltaX) / timeDiff;
-                const velocityY = Math.abs(deltaY) / timeDiff;
-                
-                // Calculate total distance
-                const totalDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                
-                // Determine if it's a swipe or tap
-                if (totalDistance < 20 && timeDiff < 300) {
-                    // Small movement, short time = tap
-                    this.handleMicroTap();
-                } else if (Math.abs(deltaX) > this.swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
-                    // Horizontal swipe
+                // Determine gesture type
+                if (this.isSwiping && absDeltaX > this.swipeThreshold && absDeltaX > absDeltaY) {
+                    // Horizontal swipe on grid line - change carousel
                     if (deltaX > 0) {
                         this.nextCarouselSlide();
                     } else {
                         this.prevCarouselSlide();
                     }
-                } else if (Math.abs(deltaY) > this.swipeThreshold && Math.abs(deltaY) > Math.abs(deltaX)) {
-                    // Vertical movement - ignore for carousel
-                    this.handleMicroTap();
+                } else if (this.isSwiping && absDeltaY > this.swipeThreshold && absDeltaY > absDeltaX) {
+                    // Vertical swipe on grid line - ignore (let iframe handle if it wants)
+                    // Do nothing for carousel
                 } else {
-                    // Not clear, treat as tap
-                    this.handleMicroTap();
+                    // Tap on grid line - might want to pass to iframe, but grid lines are for swiping only
+                    // So we do nothing for taps on grid lines
                 }
+                
+                // Reset
+                this.touchStartX = 0;
+                this.touchStartY = 0;
+                this.isSwiping = false;
+                this.resetCarouselInactivityTimer();
             }
             
-            handleMicroTap() {
-                // For a tap, we want to pass it through to the iframe
-                // We can't directly click due to cross-origin, but we can try to focus
-                const currentSlide = this.carouselSlides[this.currentCarouselIndex];
-                const iframe = currentSlide.querySelector('iframe');
-                if (iframe) {
-                    iframe.focus();
-                    
-                    // Try to dispatch a click event at the tap position
-                    try {
-                        const clickEvent = new MouseEvent('click', {
-                            view: window,
-                            bubbles: true,
-                            cancelable: true,
-                            clientX: this.touchEndX,
-                            clientY: this.touchEndY
-                        });
-                        iframe.dispatchEvent(clickEvent);
-                    } catch (e) {
-                        // Cross-origin error expected
+            handleGridMouseDown(e) {
+                this.touchStartX = e.clientX;
+                this.touchStartY = e.clientY;
+                this.touchEndX = e.clientX;
+                this.touchEndY = e.clientY;
+                this.swipeStartTime = Date.now();
+                this.isSwiping = false;
+                
+                this.resetCarouselInactivityTimer();
+            }
+            
+            handleGridMouseMove(e) {
+                if (!this.touchStartX) return;
+                
+                this.touchEndX = e.clientX;
+                this.touchEndY = e.clientY;
+                
+                const deltaX = Math.abs(this.touchStartX - this.touchEndX);
+                const deltaY = Math.abs(this.touchStartY - this.touchEndY);
+                
+                if (deltaX > 10 || deltaY > 10) {
+                    this.isSwiping = true;
+                }
+                
+                this.resetCarouselInactivityTimer();
+            }
+            
+            handleGridMouseUp(e) {
+                if (!this.touchStartX) return;
+                
+                this.touchEndX = e.clientX;
+                this.touchEndY = e.clientY;
+                
+                const deltaX = this.touchStartX - this.touchEndX;
+                const deltaY = this.touchStartY - this.touchEndY;
+                const deltaTime = Date.now() - this.swipeStartTime;
+                
+                const absDeltaX = Math.abs(deltaX);
+                const absDeltaY = Math.abs(deltaY);
+                
+                if (this.isSwiping && absDeltaX > this.swipeThreshold && absDeltaX > absDeltaY) {
+                    if (deltaX > 0) {
+                        this.nextCarouselSlide();
+                    } else {
+                        this.prevCarouselSlide();
                     }
                 }
+                
+                this.touchStartX = 0;
+                this.touchStartY = 0;
+                this.isSwiping = false;
+                this.resetCarouselInactivityTimer();
+            }
+            
+            handleGridMouseLeave() {
+                this.touchStartX = 0;
+                this.touchStartY = 0;
+                this.isSwiping = false;
             }
             
             openMobileCarousel(startIndex) {
@@ -1049,9 +1017,6 @@
                     clearTimeout(this.carouselInactivityTimeout);
                     this.carouselInactivityTimeout = null;
                 }
-                
-                // Stop micro overlay sampling
-                this.stopMicroOverlaySampling();
             }
             
             rotateToFace(targetFace) {
