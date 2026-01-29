@@ -58,13 +58,12 @@
             transition: transform 0.6s ease;
         }
 
-        /* SOLID RED CUBE FACES */
+        /* SOLID RED CUBE FACES - NO BORDER */
         .cube-face {
             position: absolute;
             width: 100%;
             height: 100%;
             background: #ff0000;
-            border: 3px solid #cc0000;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -165,6 +164,9 @@
             font-size: 70px;
             margin-bottom: 20px;
             display: block;
+            /* MAKE HEADING BOLD ON MOBILE */
+            font-weight: 900 !important;
+            text-shadow: 0 0 1px white, 0 0 2px rgba(255, 255, 255, 0.7);
         }
 
         .mobile-playlist-list {
@@ -240,12 +242,16 @@
             width: 100%;
             height: calc(100% - 70px);
             overflow: hidden;
+            /* Allow touch events to pass through to track */
+            pointer-events: none;
         }
 
         .mobile-carousel-track {
             display: flex;
             height: 100%;
             transition: transform 0.6s ease;
+            /* Make track capture touch events */
+            pointer-events: auto;
         }
 
         .mobile-carousel-slide {
@@ -255,6 +261,7 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
+            position: relative;
         }
 
         .mobile-carousel-iframe {
@@ -265,6 +272,8 @@
             border: none;
             background: transparent;
             border-radius: 10px;
+            /* Make iframe non-interactive for touch events */
+            pointer-events: none;
         }
 
         /* Carousel indicators */
@@ -288,6 +297,7 @@
             cursor: pointer;
             padding: 0;
             transition: background 0.3s, transform 0.3s;
+            pointer-events: auto;
         }
 
         .mobile-carousel-indicator.active {
@@ -397,7 +407,7 @@
 <body>
     <div class="radio-text">RADIO</div>
     
-    <!-- Desktop Cube View -->
+    <!-- Desktop Cube View (UNCHANGED - Radio 2 on left, Radio 4 on right) -->
     <div class="scene" id="scene">
         <div class="cube-container" id="cubeContainer">
             <!-- 1: Radio 1 -->
@@ -412,7 +422,7 @@
                 </div>
             </div>
             
-            <!-- 2: Radio 2 (ON LEFT) -->
+            <!-- 2: Radio 2 (ON LEFT - UNCHANGED) -->
             <div class="cube-face cube-face-left">
                 <div class="player-container">
                     <iframe 
@@ -436,7 +446,7 @@
                 </div>
             </div>
             
-            <!-- 4: Radio 4 (ON RIGHT) -->
+            <!-- 4: Radio 4 (ON RIGHT - UNCHANGED) -->
             <div class="cube-face cube-face-right">
                 <div class="player-container">
                     <iframe 
@@ -534,8 +544,8 @@
                 this.mobileCarouselTrack = document.getElementById('mobileCarouselTrack');
                 this.mobileCarouselIndicators = document.getElementById('mobileCarouselIndicators');
                 
-                // Radio URLs - CORRECT ORDER
-                this.radioUrls = [
+                // Cube radio URLs (unchanged order)
+                this.cubeRadioUrls = [
                     'https://embed.music.apple.com/de/playlist/radio-1/pl.u-55D6ZNlH65KbDqe?l=en',
                     'https://embed.music.apple.com/de/playlist/radio-2/pl.u-pMylgxvSWJVDZ9j?l=en',
                     'https://embed.music.apple.com/de/playlist/radio-3/pl.u-zPyLl9Rue01ypmo?l=en',
@@ -544,7 +554,17 @@
                     'https://embed.music.apple.com/de/playlist/radio-6/pl.u-55D6Zq7I65KbDqe?l=en'
                 ];
                 
-                // Radio names - ALL UPPERCASE
+                // Carousel radio URLs - SWITCHED 2 and 4
+                this.carouselRadioUrls = [
+                    'https://embed.music.apple.com/de/playlist/radio-1/pl.u-55D6ZNlH65KbDqe?l=en',  // Radio 1
+                    'https://embed.music.apple.com/de/playlist/radio-4/pl.u-qxylEY6s3maARZy?l=en',  // Radio 4 (SWITCHED - replaces Radio 2)
+                    'https://embed.music.apple.com/de/playlist/radio-3/pl.u-zPyLl9Rue01ypmo?l=en',  // Radio 3
+                    'https://embed.music.apple.com/de/playlist/radio-2/pl.u-pMylgxvSWJVDZ9j?l=en',  // Radio 2 (SWITCHED - replaces Radio 4)
+                    'https://embed.music.apple.com/de/playlist/radio-5/pl.u-4JomaBmCJLE6Zg0?l=en',  // Radio 5
+                    'https://embed.music.apple.com/de/playlist/radio-6/pl.u-55D6Zq7I65KbDqe?l=en'   // Radio 6
+                ];
+                
+                // Radio names (unchanged for both cube and carousel)
                 this.radioNames = [
                     'RADIO 1', 'RADIO 2', 'RADIO 3', 'RADIO 4', 'RADIO 5', 'RADIO 6'
                 ];
@@ -571,8 +591,9 @@
                 this.touchStartX = 0;
                 this.touchEndX = 0;
                 this.swipeThreshold = 50;
+                this.isSwiping = false;
                 
-                // Face rotations for desktop
+                // Face rotations for desktop (unchanged)
                 this.faceRotations = [
                     { x: 0, y: 0 },      // 1: Front (Radio 1)
                     { x: 0, y: -90 },    // 2: Left (Radio 2)
@@ -607,8 +628,8 @@
                 this.mobileCarouselTrack.innerHTML = '';
                 this.mobileCarouselIndicators.innerHTML = '';
                 
-                // Create slides for each radio
-                for (let i = 0; i < this.radioUrls.length; i++) {
+                // Create slides for each radio using CAROUSEL URLs (with 2 and 4 switched)
+                for (let i = 0; i < this.carouselRadioUrls.length; i++) {
                     // Create slide
                     const slide = document.createElement('div');
                     slide.className = 'mobile-carousel-slide';
@@ -619,7 +640,7 @@
                     iframe.className = 'mobile-carousel-iframe';
                     iframe.allow = 'autoplay *; encrypted-media *;';
                     iframe.sandbox = 'allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation';
-                    iframe.src = this.radioUrls[i];
+                    iframe.src = this.carouselRadioUrls[i];
                     
                     slide.appendChild(iframe);
                     this.mobileCarouselTrack.appendChild(slide);
@@ -678,38 +699,8 @@
                     this.closeMobileCarousel();
                 });
                 
-                // Touch swipe events for carousel
-                this.mobileCarouselContainer.addEventListener('touchstart', (e) => {
-                    this.touchStartX = e.changedTouches[0].screenX;
-                    this.resetCarouselInactivityTimer();
-                }, { passive: true });
-                
-                this.mobileCarouselContainer.addEventListener('touchmove', (e) => {
-                    this.resetCarouselInactivityTimer();
-                }, { passive: true });
-                
-                this.mobileCarouselContainer.addEventListener('touchend', (e) => {
-                    this.touchEndX = e.changedTouches[0].screenX;
-                    this.handleCarouselSwipe();
-                    this.resetCarouselInactivityTimer();
-                }, { passive: true });
-                
-                // Mouse events for carousel
-                this.mobileCarouselContainer.addEventListener('mousedown', (e) => {
-                    this.touchStartX = e.clientX;
-                    this.resetCarouselInactivityTimer();
-                });
-                
-                this.mobileCarouselContainer.addEventListener('mouseup', (e) => {
-                    this.touchEndX = e.clientX;
-                    this.handleCarouselSwipe();
-                    this.resetCarouselInactivityTimer();
-                });
-                
-                // Click on carousel
-                this.mobileCarouselContainer.addEventListener('click', () => {
-                    this.resetCarouselInactivityTimer();
-                });
+                // Improved touch swipe events for carousel
+                this.setupCarouselSwipeEvents();
                 
                 // Keyboard navigation for carousel
                 document.addEventListener('keydown', (e) => {
@@ -724,6 +715,70 @@
                             this.closeMobileCarousel();
                         }
                     }
+                });
+            }
+            
+            setupCarouselSwipeEvents() {
+                // Capture touch events on the track (not the iframe)
+                this.mobileCarouselTrack.addEventListener('touchstart', (e) => {
+                    this.touchStartX = e.touches[0].clientX;
+                    this.isSwiping = true;
+                    this.resetCarouselInactivityTimer();
+                    e.preventDefault(); // Prevent default to ensure smooth swiping
+                }, { passive: false });
+                
+                this.mobileCarouselTrack.addEventListener('touchmove', (e) => {
+                    if (!this.isSwiping) return;
+                    
+                    this.touchEndX = e.touches[0].clientX;
+                    const diff = this.touchStartX - this.touchEndX;
+                    
+                    // Only prevent default if we're actually swiping
+                    if (Math.abs(diff) > 10) {
+                        e.preventDefault();
+                    }
+                    
+                    this.resetCarouselInactivityTimer();
+                }, { passive: false });
+                
+                this.mobileCarouselTrack.addEventListener('touchend', (e) => {
+                    if (!this.isSwiping) return;
+                    
+                    this.touchEndX = e.changedTouches[0].clientX;
+                    this.handleCarouselSwipe();
+                    this.isSwiping = false;
+                    this.resetCarouselInactivityTimer();
+                }, { passive: true });
+                
+                // Mouse events for desktop testing
+                this.mobileCarouselTrack.addEventListener('mousedown', (e) => {
+                    this.touchStartX = e.clientX;
+                    this.isSwiping = true;
+                    this.resetCarouselInactivityTimer();
+                });
+                
+                this.mobileCarouselTrack.addEventListener('mousemove', (e) => {
+                    if (!this.isSwiping) return;
+                    this.touchEndX = e.clientX;
+                    this.resetCarouselInactivityTimer();
+                });
+                
+                this.mobileCarouselTrack.addEventListener('mouseup', (e) => {
+                    if (!this.isSwiping) return;
+                    
+                    this.touchEndX = e.clientX;
+                    this.handleCarouselSwipe();
+                    this.isSwiping = false;
+                    this.resetCarouselInactivityTimer();
+                });
+                
+                this.mobileCarouselTrack.addEventListener('mouseleave', () => {
+                    this.isSwiping = false;
+                });
+                
+                // Click on carousel
+                this.mobileCarouselContainer.addEventListener('click', () => {
+                    this.resetCarouselInactivityTimer();
                 });
             }
             
@@ -761,7 +816,7 @@
                 const translateX = -index * slideWidth;
                 this.mobileCarouselTrack.style.transform = `translateX(${translateX}%)`;
                 
-                // Update title
+                // Update title (use original radio names, not switched)
                 this.mobileCarouselTitle.textContent = this.radioNames[index];
                 
                 // Update indicators
