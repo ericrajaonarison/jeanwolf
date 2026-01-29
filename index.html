@@ -271,6 +271,21 @@
             border-radius: 10px;
         }
 
+        /* Invisible overlay for swipe detection */
+        .mobile-swipe-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            /* Make it transparent but still capture touch events */
+            background: transparent;
+            /* Important: This makes it capture touch events but be visually invisible */
+            pointer-events: auto;
+            opacity: 0;
+        }
+
         /* Carousel indicators */
         .mobile-carousel-indicators {
             position: absolute;
@@ -581,11 +596,17 @@
                 this.carouselInactivityTimeout = null;
                 this.carouselSlides = [];
                 this.carouselIndicators = [];
+                this.swipeOverlays = []; // Will hold the invisible overlays
                 
-                // SIMPLE touch/swipe tracking
+                // Touch/swipe tracking
                 this.touchStartX = 0;
+                this.touchStartY = 0;
                 this.touchEndX = 0;
+                this.touchEndY = 0;
                 this.swipeThreshold = 50;
+                this.isSwiping = false;
+                this.swipeDirection = null; // 'horizontal' or 'vertical'
+                this.verticalScrollThreshold = 10; // Pixels before we consider it vertical scrolling
                 
                 // Face rotations for desktop (unchanged)
                 this.faceRotations = [
@@ -621,6 +642,7 @@
                 // Clear existing slides and indicators
                 this.mobileCarouselTrack.innerHTML = '';
                 this.mobileCarouselIndicators.innerHTML = '';
+                this.swipeOverlays = [];
                 
                 // Create slides for each radio using CAROUSEL URLs (with 2 and 4 switched)
                 for (let i = 0; i < this.carouselRadioUrls.length; i++) {
@@ -636,9 +658,16 @@
                     iframe.sandbox = 'allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation';
                     iframe.src = this.carouselRadioUrls[i];
                     
+                    // Create invisible swipe overlay
+                    const overlay = document.createElement('div');
+                    overlay.className = 'mobile-swipe-overlay';
+                    overlay.dataset.index = i;
+                    
                     slide.appendChild(iframe);
+                    slide.appendChild(overlay); // Add overlay on top of iframe
                     this.mobileCarouselTrack.appendChild(slide);
                     this.carouselSlides.push(slide);
+                    this.swipeOverlays.push(overlay);
                     
                     // Create indicator
                     const indicator = document.createElement('button');
@@ -651,6 +680,166 @@
                     
                     this.mobileCarouselIndicators.appendChild(indicator);
                     this.carouselIndicators.push(indicator);
+                }
+                
+                // Setup swipe events on the overlays
+                this.setupSwipeOverlayEvents();
+            }
+            
+            setupSwipeOverlayEvents() {
+                // Add event listeners to each overlay
+                this.swipeOverlays.forEach(overlay => {
+                    // Touch events
+                    overlay.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: true });
+                    overlay.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: true });
+                    overlay.addEventListener('touchend', this.handleTouchEnd.bind(this));
+                    
+                    // Mouse events for testing
+                    overlay.addEventListener('mousedown', this.handleMouseDown.bind(this));
+                    overlay.addEventListener('mousemove', this.handleMouseMove.bind(this));
+                    overlay.addEventListener('mouseup', this.handleMouseUp.bind(this));
+                    overlay.addEventListener('mouseleave', this.handleMouseLeave.bind(this));
+                });
+            }
+            
+            handleTouchStart(e) {
+                const touch = e.touches[0];
+                this.touchStartX = touch.clientX;
+                this.touchStartY = touch.clientY;
+                this.touchEndX = touch.clientX;
+                this.touchEndY = touch.clientY;
+                this.isSwiping = false;
+                this.swipeDirection = null;
+                this.resetCarouselInactivityTimer();
+            }
+            
+            handleTouchMove(e) {
+                if (!this.touchStartX) return;
+                
+                const touch = e.touches[0];
+                this.touchEndX = touch.clientX;
+                this.touchEndY = touch.clientY;
+                
+                // Calculate distances
+                const deltaX = this.touchStartX - this.touchEndX;
+                const deltaY = this.touchStartY - this.touchEndY;
+                
+                // Determine if this is a horizontal or vertical movement
+                if (!this.swipeDirection) {
+                    const absDeltaX = Math.abs(deltaX);
+                    const absDeltaY = Math.abs(deltaY);
+                    
+                    // If we haven't determined direction yet, check which is larger
+                    if (absDeltaX > this.verticalScrollThreshold || absDeltaY > this.verticalScrollThreshold) {
+                        this.swipeDirection = absDeltaX > absDeltaY ? 'horizontal' : 'vertical';
+                        this.isSwiping = true;
+                    }
+                }
+                
+                this.resetCarouselInactivityTimer();
+            }
+            
+            handleTouchEnd() {
+                if (!this.isSwiping) {
+                    // This was a tap, let it pass through to the iframe
+                    // We'll simulate a click on the iframe at the tap location
+                    this.simulateIframeClick();
+                } else if (this.swipeDirection === 'horizontal') {
+                    // Handle horizontal swipe
+                    this.handleCarouselSwipe();
+                }
+                // For vertical swipes, we do nothing (allow iframe scrolling)
+                
+                // Reset swipe tracking
+                this.touchStartX = 0;
+                this.touchStartY = 0;
+                this.isSwiping = false;
+                this.swipeDirection = null;
+                this.resetCarouselInactivityTimer();
+            }
+            
+            handleMouseDown(e) {
+                this.touchStartX = e.clientX;
+                this.touchStartY = e.clientY;
+                this.touchEndX = e.clientX;
+                this.touchEndY = e.clientY;
+                this.isSwiping = false;
+                this.swipeDirection = null;
+                this.resetCarouselInactivityTimer();
+            }
+            
+            handleMouseMove(e) {
+                if (!this.touchStartX) return;
+                
+                this.touchEndX = e.clientX;
+                this.touchEndY = e.clientY;
+                
+                // Calculate distances
+                const deltaX = this.touchStartX - this.touchEndX;
+                const deltaY = this.touchStartY - this.touchEndY;
+                
+                // Determine if this is a horizontal or vertical movement
+                if (!this.swipeDirection) {
+                    const absDeltaX = Math.abs(deltaX);
+                    const absDeltaY = Math.abs(deltaY);
+                    
+                    // If we haven't determined direction yet, check which is larger
+                    if (absDeltaX > this.verticalScrollThreshold || absDeltaY > this.verticalScrollThreshold) {
+                        this.swipeDirection = absDeltaX > absDeltaY ? 'horizontal' : 'vertical';
+                        this.isSwiping = true;
+                    }
+                }
+                
+                this.resetCarouselInactivityTimer();
+            }
+            
+            handleMouseUp() {
+                if (!this.isSwiping) {
+                    // This was a click, let it pass through to the iframe
+                    this.simulateIframeClick();
+                } else if (this.swipeDirection === 'horizontal') {
+                    // Handle horizontal swipe
+                    this.handleCarouselSwipe();
+                }
+                // For vertical movements, we do nothing
+                
+                // Reset swipe tracking
+                this.touchStartX = 0;
+                this.touchStartY = 0;
+                this.isSwiping = false;
+                this.swipeDirection = null;
+                this.resetCarouselInactivityTimer();
+            }
+            
+            handleMouseLeave() {
+                // If mouse leaves while dragging, cancel the swipe
+                this.touchStartX = 0;
+                this.touchStartY = 0;
+                this.isSwiping = false;
+                this.swipeDirection = null;
+            }
+            
+            simulateIframeClick() {
+                // Since we can't directly click the iframe (cross-origin restriction),
+                // we'll focus it which helps with some interactions
+                const currentSlide = this.carouselSlides[this.currentCarouselIndex];
+                const iframe = currentSlide.querySelector('iframe');
+                if (iframe) {
+                    iframe.focus();
+                }
+            }
+            
+            handleCarouselSwipe() {
+                const diff = this.touchStartX - this.touchEndX;
+                
+                if (Math.abs(diff) > this.swipeThreshold) {
+                    if (diff > 0) {
+                        // Swipe left - go to next slide
+                        this.nextCarouselSlide();
+                    } else {
+                        // Swipe right - go to previous slide
+                        this.prevCarouselSlide();
+                    }
                 }
             }
             
@@ -693,9 +882,6 @@
                     this.closeMobileCarousel();
                 });
                 
-                // SIMPLE touch swipe events for carousel
-                this.setupCarouselSwipeEvents();
-                
                 // Keyboard navigation for carousel
                 document.addEventListener('keydown', (e) => {
                     if (this.mobileCarouselContainer.style.display === 'block') {
@@ -709,37 +895,6 @@
                             this.closeMobileCarousel();
                         }
                     }
-                });
-            }
-            
-            setupCarouselSwipeEvents() {
-                // SIMPLE touch events on the entire carousel container
-                this.mobileCarouselContainer.addEventListener('touchstart', (e) => {
-                    this.touchStartX = e.touches[0].clientX;
-                    this.resetCarouselInactivityTimer();
-                }, { passive: true });
-                
-                this.mobileCarouselContainer.addEventListener('touchend', (e) => {
-                    this.touchEndX = e.changedTouches[0].clientX;
-                    this.handleCarouselSwipe();
-                    this.resetCarouselInactivityTimer();
-                }, { passive: true });
-                
-                // Mouse events for testing on desktop
-                this.mobileCarouselContainer.addEventListener('mousedown', (e) => {
-                    this.touchStartX = e.clientX;
-                    this.resetCarouselInactivityTimer();
-                });
-                
-                this.mobileCarouselContainer.addEventListener('mouseup', (e) => {
-                    this.touchEndX = e.clientX;
-                    this.handleCarouselSwipe();
-                    this.resetCarouselInactivityTimer();
-                });
-                
-                // Click on carousel
-                this.mobileCarouselContainer.addEventListener('click', () => {
-                    this.resetCarouselInactivityTimer();
                 });
             }
             
@@ -804,24 +959,10 @@
                 this.goToCarouselSlide(prevIndex);
             }
             
-            handleCarouselSwipe() {
-                const diff = this.touchStartX - this.touchEndX;
-                
-                if (Math.abs(diff) > this.swipeThreshold) {
-                    if (diff > 0) {
-                        // Swipe left - go to next slide
-                        this.nextCarouselSlide();
-                    } else {
-                        // Swipe right - go to previous slide
-                        this.prevCarouselSlide();
-                    }
-                }
-            }
-            
             resetCarouselInactivityTimer() {
                 // Clear existing timeout
                 if (this.carouselInactivityTimeout) {
-                    clearTimeout(this.carouselInactivityTimeout);
+                    clearTimeout(this.carouselInactivityTimer);
                 }
                 
                 if (this.carouselAutoRotateTimeout) {
