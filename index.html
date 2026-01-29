@@ -161,7 +161,7 @@
             .cube-face-bottom { transform: rotateX(-90deg) translateZ(250px); }
         }
 
-        /* Mobile styles - WIDER PLAYER */
+        /* Mobile styles - FIXED: PROPERLY CENTERED WITH GAP */
         @media (max-width: 768px) {
             .scene {
                 align-items: center;
@@ -175,15 +175,15 @@
                 height: 280px; /* Reduced from 340px */
             }
             
-            /* MUCH WIDER PLAYER */
+            /* FIXED: Proper dimensions and scale for mobile */
             .player-container {
-                width: 900px; /* WIDER - was 720px, now 900px */
-                height: 500px; /* Slightly taller for better aspect ratio */
-                transform: scale(0.45); /* Adjusted scale for wider player */
+                width: 700px; /* Optimized width for visibility */
+                height: 380px; /* Shorter height to fit in cube */
+                transform: scale(0.52); /* Adjusted to fit within cube with gap */
             }
             
             .player-container.flipped {
-                transform: scale(0.45) rotate(180deg);
+                transform: scale(0.52) rotate(180deg);
             }
             
             .player-iframe {
@@ -213,7 +213,7 @@
             }
         }
 
-        /* Very small phones - WIDER PLAYER */
+        /* Very small phones - FIXED: PROPERLY CENTERED WITH GAP */
         @media (max-width: 480px) and (orientation: portrait) {
             .scene {
                 perspective: 600px;
@@ -224,15 +224,15 @@
                 height: 240px; /* Reduced from 300px */
             }
             
-            /* MUCH WIDER PLAYER */
+            /* FIXED: Proper dimensions and scale for small phones */
             .player-container {
-                width: 900px; /* WIDER - same width for consistency */
-                height: 500px; /* Adjusted height */
-                transform: scale(0.38); /* Adjusted scale for wider player */
+                width: 600px; /* Optimized for small screens */
+                height: 330px; /* Adjusted height */
+                transform: scale(0.52); /* Same scale for consistency */
             }
             
             .player-container.flipped {
-                transform: scale(0.38) rotate(180deg);
+                transform: scale(0.52) rotate(180deg);
             }
             
             .player-iframe {
@@ -261,11 +261,13 @@
             }
         }
 
-        /* Landscape mobile - WIDER PLAYER */
+        /* Landscape mobile - FIXED: PROPERLY CENTERED WITH GAP */
         @media (max-width: 900px) and (orientation: landscape) {
             .scene {
                 perspective: 700px;
                 padding-top: 0;
+                align-items: center;
+                justify-content: center;
             }
             
             .cube-container {
@@ -273,15 +275,15 @@
                 height: 260px; /* Reduced from 320px */
             }
             
-            /* MUCH WIDER PLAYER */
+            /* FIXED: Optimized for landscape */
             .player-container {
-                width: 900px; /* WIDER - same width for consistency */
-                height: 500px; /* Adjusted height */
-                transform: scale(0.42); /* Adjusted scale for wider player */
+                width: 650px; /* Slightly less wide for landscape */
+                height: 350px; /* Adjusted height */
+                transform: scale(0.55); /* Slightly larger for landscape */
             }
             
             .player-container.flipped {
-                transform: scale(0.42) rotate(180deg);
+                transform: scale(0.55) rotate(180deg);
             }
             
             .player-iframe {
