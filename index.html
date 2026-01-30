@@ -236,11 +236,14 @@
             padding: 10px 0;
         }
 
+        /* Main carousel container - allows horizontal panning */
         .mobile-carousel {
             position: relative;
             width: 100%;
             height: calc(100% - 70px);
             overflow: hidden;
+            /* This is key: allow horizontal panning at container level */
+            touch-action: pan-y pinch-zoom;
         }
 
         .mobile-carousel-track {
@@ -248,6 +251,8 @@
             height: 100%;
             transition: transform 0.6s ease;
             width: 100%;
+            /* Allow horizontal panning for carousel */
+            touch-action: pan-y;
         }
 
         .mobile-carousel-slide {
@@ -258,6 +263,8 @@
             align-items: center;
             padding: 20px;
             position: relative;
+            /* Prevent horizontal scroll on slide itself */
+            touch-action: pan-y;
         }
 
         .mobile-carousel-iframe {
@@ -269,39 +276,15 @@
             background: transparent;
             border-radius: 10px;
             pointer-events: auto;
+            /* KEY: Allow vertical scrolling inside iframe, prevent horizontal */
+            touch-action: pan-y;
+            /* Ensure iframe content can be scrolled */
+            -webkit-overflow-scrolling: touch;
+            overflow: auto;
         }
 
-        /* Dot grid overlay for swipe detection */
-        .dot-grid-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 5;
-            pointer-events: none; /* Container doesn't block, only dots do */
-        }
-
-        /* Individual dots - very small and sparse */
-        .swipe-dot {
-            position: absolute;
-            width: 6px; /* Very small */
-            height: 6px;
-            border-radius: 50%;
-            background: transparent; /* Invisible */
-            pointer-events: auto; /* Only dots capture events */
-            opacity: 0; /* Completely invisible */
-            z-index: 6;
-            /* Add a tiny hover effect for debugging */
-            transition: background 0.2s;
-        }
-
-        /* For debugging: make dots visible when needed */
-        .swipe-dot.debug {
-            background: rgba(255, 0, 0, 0.1);
-            opacity: 0.3;
-        }
-
+        /* Remove all dot grid overlay styles - we don't need them anymore */
+        
         /* Carousel indicators */
         .mobile-carousel-indicators {
             position: absolute;
@@ -324,6 +307,7 @@
             padding: 0;
             transition: background 0.3s, transform 0.3s;
             pointer-events: auto;
+            touch-action: manipulation;
         }
 
         .mobile-carousel-indicator.active {
@@ -589,7 +573,7 @@
                 this.carouselSlides = [];
                 this.carouselIndicators = [];
                 
-                // Dot grid tracking
+                // Swipe detection variables
                 this.touchStartX = 0;
                 this.touchStartY = 0;
                 this.touchEndX = 0;
@@ -598,10 +582,6 @@
                 this.isSwiping = false;
                 this.swipeStartTime = 0;
                 this.tapThreshold = 200; // ms
-                this.dotSize = 6; // px
-                this.dotSpacing = 40; // px - sparse grid
-                this.dots = [];
-                this.activeDot = null;
                 
                 // Face rotations
                 this.faceRotations = [
@@ -635,7 +615,8 @@
             createCarousel() {
                 this.mobileCarouselTrack.innerHTML = '';
                 this.mobileCarouselIndicators.innerHTML = '';
-                this.dots = [];
+                this.carouselSlides = [];
+                this.carouselIndicators = [];
                 
                 for (let i = 0; i < this.carouselRadioUrls.length; i++) {
                     const slide = document.createElement('div');
@@ -648,13 +629,10 @@
                     iframe.sandbox = 'allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation';
                     iframe.src = this.carouselRadioUrls[i];
                     
-                    // Create dot grid overlay for this slide
-                    const dotGrid = document.createElement('div');
-                    dotGrid.className = 'dot-grid-overlay';
-                    dotGrid.dataset.index = i;
+                    // Set touch-action on iframe to allow vertical scrolling
+                    iframe.style.touchAction = 'pan-y';
                     
                     slide.appendChild(iframe);
-                    slide.appendChild(dotGrid);
                     this.mobileCarouselTrack.appendChild(slide);
                     this.carouselSlides.push(slide);
                     
@@ -669,74 +647,46 @@
                     
                     this.mobileCarouselIndicators.appendChild(indicator);
                     this.carouselIndicators.push(indicator);
-                    
-                    // Create dots for this slide
-                    this.createDotGrid(dotGrid, slide);
                 }
+                
+                // Setup swipe detection on the carousel track
+                this.setupCarouselSwipeDetection();
             }
             
-            createDotGrid(dotGrid, slide) {
-                // Get slide dimensions
-                const rect = slide.getBoundingClientRect();
-                const width = rect.width;
-                const height = rect.height;
-                
-                // Calculate number of dots
-                const cols = Math.floor(width / this.dotSpacing);
-                const rows = Math.floor(height / this.dotSpacing);
-                
-                // Create grid of dots
-                for (let row = 0; row < rows; row++) {
-                    for (let col = 0; col < cols; col++) {
-                        const dot = document.createElement('div');
-                        dot.className = 'swipe-dot';
-                        
-                        // Position dot
-                        const x = col * this.dotSpacing + this.dotSpacing / 2;
-                        const y = row * this.dotSpacing + this.dotSpacing / 2;
-                        
-                        dot.style.left = `${x}px`;
-                        dot.style.top = `${y}px`;
-                        
-                        // Add to grid
-                        dotGrid.appendChild(dot);
-                        this.dots.push(dot);
-                        
-                        // Add event listeners
-                        this.setupDotEvents(dot);
-                    }
-                }
-            }
-            
-            setupDotEvents(dot) {
-                // Touch events
-                dot.addEventListener('touchstart', (e) => {
-                    this.handleDotTouchStart(e, dot);
+            setupCarouselSwipeDetection() {
+                // Setup touch events on the carousel track
+                this.mobileCarouselTrack.addEventListener('touchstart', (e) => {
+                    this.handleCarouselTouchStart(e);
                 }, { passive: true });
                 
-                dot.addEventListener('touchmove', (e) => {
-                    this.handleDotTouchMove(e);
+                this.mobileCarouselTrack.addEventListener('touchmove', (e) => {
+                    this.handleCarouselTouchMove(e);
                 }, { passive: true });
                 
-                dot.addEventListener('touchend', (e) => {
-                    this.handleDotTouchEnd(e);
+                this.mobileCarouselTrack.addEventListener('touchend', (e) => {
+                    this.handleCarouselTouchEnd(e);
                 }, { passive: true });
                 
-                // Mouse events for testing
-                dot.addEventListener('mousedown', (e) => {
-                    this.handleDotMouseDown(e, dot);
+                // Also add mouse events for testing on desktop
+                this.mobileCarouselTrack.addEventListener('mousedown', (e) => {
+                    this.handleCarouselMouseDown(e);
                 });
                 
-                dot.addEventListener('mousemove', (e) => {
-                    this.handleDotMouseMove(e);
+                this.mobileCarouselTrack.addEventListener('mousemove', (e) => {
+                    this.handleCarouselMouseMove(e);
                 });
                 
-                dot.addEventListener('mouseup', (e) => {
-                    this.handleDotMouseUp(e);
+                this.mobileCarouselTrack.addEventListener('mouseup', (e) => {
+                    this.handleCarouselMouseUp(e);
+                });
+                
+                // Add mouse leave handler
+                this.mobileCarouselTrack.addEventListener('mouseleave', (e) => {
+                    this.handleCarouselMouseLeave(e);
                 });
             }
             
-            handleDotTouchStart(e, dot) {
+            handleCarouselTouchStart(e) {
                 const touch = e.touches[0];
                 this.touchStartX = touch.clientX;
                 this.touchStartY = touch.clientY;
@@ -744,16 +694,12 @@
                 this.touchEndY = touch.clientY;
                 this.swipeStartTime = Date.now();
                 this.isSwiping = false;
-                this.activeDot = dot;
-                
-                // For debugging: highlight the dot
-                // dot.classList.add('debug');
                 
                 this.resetCarouselInactivityTimer();
             }
             
-            handleDotTouchMove(e) {
-                if (!this.touchStartX || !this.activeDot) return;
+            handleCarouselTouchMove(e) {
+                if (!this.touchStartX) return;
                 
                 const touch = e.touches[0];
                 this.touchEndX = touch.clientX;
@@ -763,16 +709,16 @@
                 const deltaX = Math.abs(this.touchStartX - this.touchEndX);
                 const deltaY = Math.abs(this.touchStartY - this.touchEndY);
                 
-                // If we're moving more than 10px, we're swiping
-                if (deltaX > 10 || deltaY > 10) {
+                // If we're moving more horizontally than vertically, we're swiping
+                if (deltaX > deltaY && deltaX > 5) {
                     this.isSwiping = true;
                 }
                 
                 this.resetCarouselInactivityTimer();
             }
             
-            handleDotTouchEnd(e) {
-                if (!this.touchStartX || !this.activeDot) return;
+            handleCarouselTouchEnd(e) {
+                if (!this.touchStartX) return;
                 
                 const touch = e.changedTouches[0];
                 this.touchEndX = touch.clientX;
@@ -786,21 +732,16 @@
                 const absDeltaX = Math.abs(deltaX);
                 const absDeltaY = Math.abs(deltaY);
                 
-                // Determine gesture type
+                // Determine if it's a horizontal swipe
                 if (this.isSwiping && absDeltaX > this.swipeThreshold && absDeltaX > absDeltaY) {
-                    // Horizontal swipe on a dot - change carousel
+                    // Horizontal swipe - change carousel
                     if (deltaX > 0) {
                         this.nextCarouselSlide();
                     } else {
                         this.prevCarouselSlide();
                     }
                 }
-                // For taps on dots, we do nothing - let iframe handle it
-                // Vertical swipes are ignored for carousel
-                
-                // Clean up
-                // this.activeDot.classList.remove('debug');
-                this.activeDot = null;
+                // If not a swipe, let the tap pass through to the iframe
                 
                 // Reset
                 this.touchStartX = 0;
@@ -809,23 +750,19 @@
                 this.resetCarouselInactivityTimer();
             }
             
-            handleDotMouseDown(e, dot) {
+            handleCarouselMouseDown(e) {
                 this.touchStartX = e.clientX;
                 this.touchStartY = e.clientY;
                 this.touchEndX = e.clientX;
                 this.touchEndY = e.clientY;
                 this.swipeStartTime = Date.now();
                 this.isSwiping = false;
-                this.activeDot = dot;
-                
-                // For debugging
-                // dot.classList.add('debug');
                 
                 this.resetCarouselInactivityTimer();
             }
             
-            handleDotMouseMove(e) {
-                if (!this.touchStartX || !this.activeDot) return;
+            handleCarouselMouseMove(e) {
+                if (!this.touchStartX) return;
                 
                 this.touchEndX = e.clientX;
                 this.touchEndY = e.clientY;
@@ -833,15 +770,15 @@
                 const deltaX = Math.abs(this.touchStartX - this.touchEndX);
                 const deltaY = Math.abs(this.touchStartY - this.touchEndY);
                 
-                if (deltaX > 10 || deltaY > 10) {
+                if (deltaX > deltaY && deltaX > 5) {
                     this.isSwiping = true;
                 }
                 
                 this.resetCarouselInactivityTimer();
             }
             
-            handleDotMouseUp(e) {
-                if (!this.touchStartX || !this.activeDot) return;
+            handleCarouselMouseUp(e) {
+                if (!this.touchStartX) return;
                 
                 this.touchEndX = e.clientX;
                 this.touchEndY = e.clientY;
@@ -861,14 +798,17 @@
                     }
                 }
                 
-                // Clean up
-                // this.activeDot.classList.remove('debug');
-                this.activeDot = null;
-                
                 this.touchStartX = 0;
                 this.touchStartY = 0;
                 this.isSwiping = false;
                 this.resetCarouselInactivityTimer();
+            }
+            
+            handleCarouselMouseLeave(e) {
+                // Reset if mouse leaves while dragging
+                this.touchStartX = 0;
+                this.touchStartY = 0;
+                this.isSwiping = false;
             }
             
             setupEventListeners() {
