@@ -1,274 +1,1097 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RADIO</title>
-<style>
-    * { margin:0; padding:0; box-sizing:border-box; text-transform: uppercase; }
-    html, body { width:100%; height:100%; overflow:hidden; background:#000; font-family: Helvetica, Arial, sans-serif; }
-    .radio-text { position: fixed; top:40px; left:40px; font-weight:900; font-size:80px; color:#fff; letter-spacing:-2px; line-height:1; opacity:0.95; z-index:100; pointer-events:none; }
-    .scene { position: fixed; top:0; left:0; width:100%; height:100%; display:flex; justify-content:center; align-items:center; perspective:1200px; transform-style: preserve-3d; }
-    .cube-container { position: relative; width:400px; height:400px; transform-style: preserve-3d; transform-origin: center center; transition: transform 0.6s ease; }
-    .cube-face { position:absolute; width:100%; height:100%; background:#ff0000; display:flex; justify-content:center; align-items:center; overflow:hidden; backface-visibility:hidden; pointer-events:none; }
-    .player-container { position: relative; width:660px; height:450px; pointer-events:auto; transform-origin:center center; transform: scale(0.65); }
-    .player-container.flipped { transform: scale(0.65) rotate(180deg); }
-    .player-iframe { width:100%; height:100%; border:none; background:transparent; border-radius:10px; pointer-events:auto; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RADIO</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            text-transform: uppercase;
+        }
 
-    .cube-face-front  { transform: rotateY(0deg) translateZ(200px); }
-    .cube-face-back   { transform: rotateY(180deg) translateZ(200px); }
-    .cube-face-right  { transform: rotateY(90deg) translateZ(200px); }
-    .cube-face-left   { transform: rotateY(-90deg) translateZ(200px); }
-    .cube-face-top    { transform: rotateX(90deg) translateZ(200px); }
-    .cube-face-bottom { transform: rotateX(-90deg) translateZ(200px); }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            font-family: Helvetica, Arial, sans-serif;
+        }
 
-    .number-nav { position: fixed; bottom:40px; left:0; right:0; display:flex; justify-content:center; gap:30px; z-index:100; }
-    .number-btn { color:#fff; font-size:24px; font-weight:400; background:none; border:none; cursor:pointer; border-bottom:2px solid transparent; transition: font-weight 0.2s, border-color 0.2s; }
-    .number-btn:hover { border-bottom:2px solid #fff; }
-    .number-btn.active { font-weight:900; border-bottom:2px solid #fff; }
+        .radio-text {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: 900;
+            font-size: 80px;
+            color: #fff;
+            letter-spacing: -2px;
+            line-height: 1;
+            opacity: 0.95;
+            z-index: 100;
+            pointer-events: none;
+            display: block;
+        }
 
-    .mobile-container { display:none; position:fixed; top:0; left:0; width:100%; height:100%; overflow-y:auto; background:#000; z-index:1000; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
-    .mobile-header { padding:20px; padding-top:100px; padding-bottom:30px; }
-    .mobile-header .radio-text { position: static; font-size:70px; margin-bottom:20px; text-shadow:0 0 1px white, 0 0 2px rgba(255,255,255,0.7); }
-    .mobile-playlist-list { padding:0 20px 40px 20px; }
-    .mobile-playlist-btn { display:block; width:100%; color:#fff; font-size:28px; font-weight:400; background:none; border:none; text-align:left; padding:20px 0; margin-bottom:10px; cursor:pointer; transition: font-weight 0.2s; }
-    .mobile-playlist-btn:hover, .mobile-playlist-btn.active { font-weight:900; }
+        .scene {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1200px;
+            transform-style: preserve-3d;
+        }
 
-    .mobile-carousel-container { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:1001; display:none; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); overflow:hidden; }
-    .mobile-carousel-header { padding:20px; display:flex; align-items:center; justify-content:space-between; position:relative; z-index:10; }
-    .mobile-carousel-title { color:#fff; font-size:24px; text-align:center; flex:1; }
-    .mobile-carousel-back-btn { color:#fff; font-size:18px; background:none; border:none; cursor:pointer; padding:10px 0; }
-    .mobile-carousel { position:relative; width:100%; height:calc(100% - 70px); overflow:hidden; }
-    .mobile-carousel-track { display:flex; height:100%; transition: transform 0.6s ease; width:100%; }
-    .mobile-carousel-slide { flex:0 0 100%; height:100%; display:flex; justify-content:center; align-items:center; padding:20px; position:relative; touch-action: pan-y; }
-    .mobile-carousel-iframe { width:100%; height:100%; max-width:660px; max-height:450px; border:none; background:transparent; border-radius:10px; pointer-events:auto; }
+        .cube-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            transform-style: preserve-3d;
+            transform-origin: center center;
+            transition: transform 0.6s ease;
+        }
 
-    .mobile-carousel-indicators { position:absolute; bottom:20px; left:0; right:0; display:flex; justify-content:center; gap:10px; z-index:10; }
-    .mobile-carousel-indicator { width:8px; height:8px; border-radius:50%; background: rgba(255,255,255,0.3); border:none; cursor:pointer; padding:0; transition: background 0.3s, transform 0.3s; pointer-events:auto; }
-    .mobile-carousel-indicator.active { background: rgba(255,255,255,0.9); transform: scale(1.2); }
+        /* SOLID RED CUBE FACES - NO BORDER */
+        .cube-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #ff0000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            backface-visibility: hidden;
+            pointer-events: none;
+        }
 
-    @media (min-width: 769px) {
-        .cube-container { width:500px; height:500px; }
-        .player-container { transform: scale(0.75); }
-        .player-container.flipped { transform: scale(0.75) rotate(180deg); }
-        .cube-face-front  { transform: rotateY(0deg) translateZ(250px); }
-        .cube-face-back   { transform: rotateY(180deg) translateZ(250px); }
-        .cube-face-right  { transform: rotateY(90deg) translateZ(250px); }
-        .cube-face-left   { transform: rotateY(-90deg) translateZ(250px); }
-        .cube-face-top    { transform: rotateX(90deg) translateZ(250px); }
-        .cube-face-bottom { transform: rotateX(-90deg) translateZ(250px); }
-    }
+        .player-container {
+            position: relative;
+            width: 660px;
+            height: 450px;
+            pointer-events: auto;
+            transform-origin: center center;
+            transform: scale(0.65);
+        }
 
-    @media (max-width: 768px) {
-        .scene, .number-nav, .radio-text { display:none !important; }
-        .mobile-container { display:block; }
-        @media (max-height:700px) { .mobile-header { padding-top:80px; } .mobile-header .radio-text { font-size:60px; } .mobile-playlist-btn { font-size:24px; padding:15px 0; } .mobile-carousel-slide { padding:15px; } }
-        @media (max-height:600px) { .mobile-header { padding-top:60px; } .mobile-header .radio-text { font-size:50px; margin-bottom:10px; } .mobile-playlist-btn { font-size:22px; padding:12px 0; } .mobile-carousel-slide { padding:10px; } .mobile-carousel-iframe { max-height:380px; } }
-        @media (orientation: landscape) and (max-height:500px) { .mobile-carousel-slide { padding:5px; } .mobile-carousel-iframe { max-height:320px; } .mobile-carousel-indicators { bottom:10px; } }
-    }
+        /* Flip players instantly when upside down - NO TRANSITION */
+        .player-container.flipped {
+            transform: scale(0.65) rotate(180deg);
+        }
 
-    ::-webkit-scrollbar { display:none; }
-</style>
+        .player-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            pointer-events: auto;
+        }
+
+        /* Cube face positions */
+        .cube-face-front  { transform: rotateY(0deg) translateZ(200px); }
+        .cube-face-back   { transform: rotateY(180deg) translateZ(200px); }
+        .cube-face-right  { transform: rotateY(90deg) translateZ(200px); }
+        .cube-face-left   { transform: rotateY(-90deg) translateZ(200px); }
+        .cube-face-top    { transform: rotateX(90deg) translateZ(200px); }
+        .cube-face-bottom { transform: rotateX(-90deg) translateZ(200px); }
+
+        /* Number Navigation */
+        .number-nav {
+            position: fixed;
+            bottom: 40px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            z-index: 100;
+        }
+
+        .number-btn {
+            color: #fff;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 24px;
+            font-weight: 400;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: font-weight 0.2s, border-color 0.2s;
+        }
+
+        .number-btn:hover {
+            border-bottom: 2px solid #fff;
+        }
+
+        .number-btn.active {
+            font-weight: 900;
+            border-bottom: 2px solid #fff;
+        }
+
+        /* MOBILE LAYOUT - PLAYLIST LIST */
+        .mobile-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            background: #000;
+            z-index: 1000;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .mobile-header {
+            padding: 20px;
+            padding-top: 100px;
+            padding-bottom: 30px;
+        }
+
+        .mobile-header .radio-text {
+            position: static;
+            font-size: 70px;
+            margin-bottom: 20px;
+            display: block;
+            /* MAKE HEADING BOLD ON MOBILE */
+            font-weight: 900 !important;
+            text-shadow: 0 0 1px white, 0 0 2px rgba(255, 255, 255, 0.7);
+        }
+
+        .mobile-playlist-list {
+            padding: 0 20px 40px 20px;
+        }
+
+        .mobile-playlist-btn {
+            display: block;
+            width: 100%;
+            color: #fff;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 28px;
+            font-weight: 400;
+            background: none;
+            border: none;
+            text-align: left;
+            padding: 20px 0;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: font-weight 0.2s;
+        }
+
+        .mobile-playlist-btn:hover,
+        .mobile-playlist-btn.active {
+            font-weight: 900;
+        }
+
+        /* MOBILE CAROUSEL VIEW */
+        .mobile-carousel-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 1001;
+            display: none;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            overflow: hidden;
+        }
+
+        .mobile-carousel-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 10;
+        }
+
+        .mobile-carousel-title {
+            color: #fff;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 24px;
+            font-weight: 400;
+            text-align: center;
+            flex: 1;
+        }
+
+        .mobile-carousel-back-btn {
+            color: #fff;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 18px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 10px 0;
+        }
+
+        .mobile-carousel {
+            position: relative;
+            width: 100%;
+            height: calc(100% - 120px);
+            overflow: hidden;
+        }
+
+        .mobile-carousel-track {
+            display: flex;
+            height: 100%;
+            transition: transform 0.6s ease;
+            width: 100%;
+        }
+
+        .mobile-carousel-slide {
+            flex: 0 0 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .mobile-carousel-iframe {
+            width: 100%;
+            height: 100%;
+            max-width: 660px;
+            max-height: 450px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+        }
+
+        /* Mobile Carousel Number Navigation (Replaces swipe) */
+        .mobile-carousel-nav {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            z-index: 10;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .mobile-carousel-nav-btn {
+            color: #fff;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 18px;
+            font-weight: 400;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px 0;
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: font-weight 0.2s, border-color 0.2s;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .mobile-carousel-nav-btn.active {
+            font-weight: 900;
+            border-bottom: 2px solid #fff;
+        }
+
+        /* Desktop styles - SMALLER */
+        @media (min-width: 769px) {
+            .cube-container {
+                width: 500px;
+                height: 500px;
+            }
+            
+            .player-container {
+                transform: scale(0.75);
+            }
+            
+            .player-container.flipped {
+                transform: scale(0.75) rotate(180deg);
+            }
+            
+            .cube-face-front  { transform: rotateY(0deg) translateZ(250px); }
+            .cube-face-back   { transform: rotateY(180deg) translateZ(250px); }
+            .cube-face-right  { transform: rotateY(90deg) translateZ(250px); }
+            .cube-face-left   { transform: rotateY(-90deg) translateZ(250px); }
+            .cube-face-top    { transform: rotateX(90deg) translateZ(250px); }
+            .cube-face-bottom { transform: rotateX(-90deg) translateZ(250px); }
+        }
+
+        /* Mobile styles - SHOW LIST, HIDE CUBE */
+        @media (max-width: 768px) {
+            .scene, .number-nav, .radio-text {
+                display: none !important;
+            }
+            
+            .mobile-container {
+                display: block;
+            }
+            
+            /* Adjust mobile layout for different phone sizes */
+            @media (max-height: 700px) {
+                .mobile-header {
+                    padding-top: 80px;
+                }
+                
+                .mobile-header .radio-text {
+                    font-size: 60px;
+                }
+                
+                .mobile-playlist-btn {
+                    font-size: 24px;
+                    padding: 15px 0;
+                }
+                
+                .mobile-carousel-slide {
+                    padding: 15px;
+                }
+                
+                .mobile-carousel {
+                    height: calc(100% - 110px);
+                }
+            }
+            
+            @media (max-height: 600px) {
+                .mobile-header {
+                    padding-top: 60px;
+                }
+                
+                .mobile-header .radio-text {
+                    font-size: 50px;
+                    margin-bottom: 10px;
+                }
+                
+                .mobile-playlist-btn {
+                    font-size: 22px;
+                    padding: 12px 0;
+                }
+                
+                .mobile-carousel-slide {
+                    padding: 10px;
+                }
+                
+                .mobile-carousel-iframe {
+                    max-height: 380px;
+                }
+                
+                .mobile-carousel {
+                    height: calc(100% - 100px);
+                }
+                
+                .mobile-carousel-nav {
+                    gap: 10px;
+                    padding: 8px;
+                }
+                
+                .mobile-carousel-nav-btn {
+                    font-size: 16px;
+                }
+            }
+            
+            /* Landscape adjustments */
+            @media (orientation: landscape) and (max-height: 500px) {
+                .mobile-carousel-slide {
+                    padding: 5px;
+                }
+                
+                .mobile-carousel-iframe {
+                    max-height: 320px;
+                }
+                
+                .mobile-carousel {
+                    height: calc(100% - 90px);
+                }
+                
+                .mobile-carousel-nav {
+                    bottom: 10px;
+                    gap: 8px;
+                }
+                
+                .mobile-carousel-nav-btn {
+                    font-size: 14px;
+                    min-width: 25px;
+                }
+            }
+        }
+
+        /* Hide scrollbars */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-<div class="radio-text">RADIO</div>
-
-<div class="scene" id="scene">
-    <div class="cube-container" id="cubeContainer">
-        <div class="cube-face cube-face-front">
-            <div class="player-container">
-                <iframe allow="autoplay *; encrypted-media *;" class="player-iframe" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/de/playlist/radio-1/pl.u-55D6ZNlH65KbDqe?l=en"></iframe>
+    <div class="radio-text">RADIO</div>
+    
+    <!-- Desktop Cube View (UNCHANGED - Radio 2 on left, Radio 4 on right) -->
+    <div class="scene" id="scene">
+        <div class="cube-container" id="cubeContainer">
+            <!-- 1: Radio 1 -->
+            <div class="cube-face cube-face-front">
+                <div class="player-container">
+                    <iframe 
+                        allow="autoplay *; encrypted-media *;"
+                        class="player-iframe"
+                        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+                        src="https://embed.music.apple.com/de/playlist/radio-1/pl.u-55D6ZNlH65KbDqe?l=en"
+                    ></iframe>
+                </div>
             </div>
-        </div>
-        <div class="cube-face cube-face-left">
-            <div class="player-container">
-                <iframe allow="autoplay *; encrypted-media *;" class="player-iframe" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/de/playlist/radio-2/pl.u-pMylgxvSWJVDZ9j?l=en"></iframe>
+            
+            <!-- 2: Radio 2 (ON LEFT - UNCHANGED) -->
+            <div class="cube-face cube-face-left">
+                <div class="player-container">
+                    <iframe 
+                        allow="autoplay *; encrypted-media *;"
+                        class="player-iframe"
+                        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+                        src="https://embed.music.apple.com/de/playlist/radio-2/pl.u-pMylgxvSWJVDZ9j?l=en"
+                    ></iframe>
+                </div>
             </div>
-        </div>
-        <div class="cube-face cube-face-back">
-            <div class="player-container">
-                <iframe allow="autoplay *; encrypted-media *;" class="player-iframe" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/de/playlist/radio-3/pl.u-zPyLl9Rue01ypmo?l=en"></iframe>
+            
+            <!-- 3: Radio 3 -->
+            <div class="cube-face cube-face-back">
+                <div class="player-container">
+                    <iframe 
+                        allow="autoplay *; encrypted-media *;"
+                        class="player-iframe"
+                        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+                        src="https://embed.music.apple.com/de/playlist/radio-3/pl.u-zPyLl9Rue01ypmo?l=en"
+                    ></iframe>
+                </div>
             </div>
-        </div>
-        <div class="cube-face cube-face-right">
-            <div class="player-container">
-                <iframe allow="autoplay *; encrypted-media *;" class="player-iframe" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/de/playlist/radio-4/pl.u-qxylEY6s3maARZy?l=en"></iframe>
+            
+            <!-- 4: Radio 4 (ON RIGHT - UNCHANGED) -->
+            <div class="cube-face cube-face-right">
+                <div class="player-container">
+                    <iframe 
+                        allow="autoplay *; encrypted-media *;"
+                        class="player-iframe"
+                        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+                        src="https://embed.music.apple.com/de/playlist/radio-4/pl.u-qxylEY6s3maARZy?l=en"
+                    ></iframe>
+                </div>
             </div>
-        </div>
-        <div class="cube-face cube-face-top">
-            <div class="player-container">
-                <iframe allow="autoplay *; encrypted-media *;" class="player-iframe" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/de/playlist/radio-5/pl.u-4JomaBmCJLE6Zg0?l=en"></iframe>
+            
+            <!-- 5: Radio 5 -->
+            <div class="cube-face cube-face-top">
+                <div class="player-container">
+                    <iframe 
+                        allow="autoplay *; encrypted-media *;"
+                        class="player-iframe"
+                        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+                        src="https://embed.music.apple.com/de/playlist/radio-5/pl.u-4JomaBmCJLE6Zg0?l=en"
+                    ></iframe>
+                </div>
             </div>
-        </div>
-        <div class="cube-face cube-face-bottom">
-            <div class="player-container">
-                <iframe allow="autoplay *; encrypted-media *;" class="player-iframe" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" src="https://embed.music.apple.com/de/playlist/radio-6/pl.u-55D6Zq7I65KbDqe?l=en"></iframe>
+            
+            <!-- 6: Radio 6 -->
+            <div class="cube-face cube-face-bottom">
+                <div class="player-container">
+                    <iframe 
+                        allow="autoplay *; encrypted-media *;"
+                        class="player-iframe"
+                        sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+                        src="https://embed.music.apple.com/de/playlist/radio-6/pl.u-55D6Zq7I65KbDqe?l=en"
+                    ></iframe>
+                </div>
             </div>
         </div>
     </div>
-</div>
-
-<div class="number-nav" id="numberNav">
-    <button class="number-btn active" onclick="radioCube.rotateToFace(0)">1</button>
-    <button class="number-btn" onclick="radioCube.rotateToFace(1)">2</button>
-    <button class="number-btn" onclick="radioCube.rotateToFace(2)">3</button>
-    <button class="number-btn" onclick="radioCube.rotateToFace(3)">4</button>
-    <button class="number-btn" onclick="radioCube.rotateToFace(4)">5</button>
-    <button class="number-btn" onclick="radioCube.rotateToFace(5)">6</button>
-</div>
-
-<div class="mobile-container" id="mobileContainer">
-    <div class="mobile-header">
-        <div class="radio-text">RADIO</div>
+    
+    <!-- Desktop Number Navigation -->
+    <div class="number-nav" id="numberNav">
+        <button class="number-btn active" onclick="radioCube.rotateToFace(0)">1</button>
+        <button class="number-btn" onclick="radioCube.rotateToFace(1)">2</button>
+        <button class="number-btn" onclick="radioCube.rotateToFace(2)">3</button>
+        <button class="number-btn" onclick="radioCube.rotateToFace(3)">4</button>
+        <button class="number-btn" onclick="radioCube.rotateToFace(4)">5</button>
+        <button class="number-btn" onclick="radioCube.rotateToFace(5)">6</button>
     </div>
-    <div class="mobile-playlist-list">
-        <button class="mobile-playlist-btn active" data-index="0">RADIO 1</button>
-        <button class="mobile-playlist-btn" data-index="1">RADIO 2</button>
-        <button class="mobile-playlist-btn" data-index="2">RADIO 3</button>
-        <button class="mobile-playlist-btn" data-index="3">RADIO 4</button>
-        <button class="mobile-playlist-btn" data-index="4">RADIO 5</button>
-        <button class="mobile-playlist-btn" data-index="5">RADIO 6</button>
+    
+    <!-- Mobile Playlist List -->
+    <div class="mobile-container" id="mobileContainer">
+        <div class="mobile-header">
+            <div class="radio-text">RADIO</div>
+        </div>
+        <div class="mobile-playlist-list">
+            <button class="mobile-playlist-btn active" data-index="0">RADIO 1</button>
+            <button class="mobile-playlist-btn" data-index="1">RADIO 2</button>
+            <button class="mobile-playlist-btn" data-index="2">RADIO 3</button>
+            <button class="mobile-playlist-btn" data-index="3">RADIO 4</button>
+            <button class="mobile-playlist-btn" data-index="4">RADIO 5</button>
+            <button class="mobile-playlist-btn" data-index="5">RADIO 6</button>
+        </div>
     </div>
-</div>
-
-<div class="mobile-carousel-container" id="mobileCarouselContainer">
-    <div class="mobile-carousel-header">
-        <button class="mobile-carousel-back-btn" id="mobileCarouselBackBtn">BACK</button>
-        <div class="mobile-carousel-title" id="mobileCarouselTitle">RADIO 1</div>
-        <div style="width:60px;"></div>
+    
+    <!-- Mobile Carousel View -->
+    <div class="mobile-carousel-container" id="mobileCarouselContainer">
+        <div class="mobile-carousel-header">
+            <button class="mobile-carousel-back-btn" id="mobileCarouselBackBtn">BACK</button>
+            <div class="mobile-carousel-title" id="mobileCarouselTitle">RADIO 1</div>
+            <div style="width: 60px;"></div>
+        </div>
+        
+        <div class="mobile-carousel" id="mobileCarousel">
+            <div class="mobile-carousel-track" id="mobileCarouselTrack">
+                <!-- Slides will be dynamically created here -->
+            </div>
+            
+            <!-- Mobile Carousel Number Navigation -->
+            <div class="mobile-carousel-nav" id="mobileCarouselNav">
+                <!-- Number buttons will be dynamically created here -->
+            </div>
+        </div>
     </div>
-    <div class="mobile-carousel" id="mobileCarousel">
-        <div class="mobile-carousel-track" id="mobileCarouselTrack"></div>
-        <div class="mobile-carousel-indicators" id="mobileCarouselIndicators"></div>
-    </div>
-</div>
 
-<script>
-class RadioCube {
-    constructor() {
-        this.cubeContainer = document.getElementById('cubeContainer');
-        this.numberNav = document.getElementById('numberNav');
-        this.mobileContainer = document.getElementById('mobileContainer');
-        this.mobilePlaylistBtns = document.querySelectorAll('.mobile-playlist-btn');
-
-        this.mobileCarouselContainer = document.getElementById('mobileCarouselContainer');
-        this.mobileCarouselBackBtn = document.getElementById('mobileCarouselBackBtn');
-        this.mobileCarouselTitle = document.getElementById('mobileCarouselTitle');
-        this.mobileCarouselTrack = document.getElementById('mobileCarouselTrack');
-        this.mobileCarouselIndicators = document.getElementById('mobileCarouselIndicators');
-
-        this.radioNames = ['RADIO 1','RADIO 2','RADIO 3','RADIO 4','RADIO 5','RADIO 6'];
-        this.carouselRadioUrls = [
-            'https://embed.music.apple.com/de/playlist/radio-1/pl.u-55D6ZNlH65KbDqe?l=en',
-            'https://embed.music.apple.com/de/playlist/radio-2/pl.u-pMylgxvSWJVDZ9j?l=en',
-            'https://embed.music.apple.com/de/playlist/radio-3/pl.u-zPyLl9Rue01ypmo?l=en',
-            'https://embed.music.apple.com/de/playlist/radio-4/pl.u-qxylEY6s3maARZy?l=en',
-            'https://embed.music.apple.com/de/playlist/radio-5/pl.u-4JomaBmCJLE6Zg0?l=en',
-            'https://embed.music.apple.com/de/playlist/radio-6/pl.u-55D6Zq7I65KbDqe?l=en'
-        ];
-
-        this.currentCarouselIndex = 0;
-        this.carouselSlides = [];
-        this.carouselIndicators = [];
-        this.isCarouselAnimating = false;
-
-        this.init();
-    }
-
-    init() {
-        this.setupMobileEvents();
-        this.createCarousel();
-    }
-
-    createCarousel() {
-        this.mobileCarouselTrack.innerHTML = '';
-        this.mobileCarouselIndicators.innerHTML = '';
-        this.carouselSlides = [];
-        this.carouselIndicators = [];
-
-        this.carouselRadioUrls.forEach((url,index)=>{
-            const slide = document.createElement('div');
-            slide.className='mobile-carousel-slide';
-            slide.dataset.index=index;
-
-            const iframe = document.createElement('iframe');
-            iframe.className='mobile-carousel-iframe';
-            iframe.allow='autoplay *; encrypted-media *;';
-            iframe.sandbox='allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation';
-            iframe.src=url;
-
-            slide.appendChild(iframe);
-            this.mobileCarouselTrack.appendChild(slide);
-            this.carouselSlides.push(slide);
-
-            // horizontal swipe handling
-            let startX=0,startY=0,isSwiping=false;
-            slide.addEventListener('touchstart', e=>{ const t=e.touches[0]; startX=t.clientX; startY=t.clientY; isSwiping=false; }, {passive:true});
-            slide.addEventListener('touchmove', e=>{ const t=e.touches[0]; const dx=t.clientX-startX; const dy=t.clientY-startY; if(!isSwiping && Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>30){ isSwiping=true; dx<0?this.nextCarouselSlide():this.prevCarouselSlide(); } }, {passive:true});
-
-            // indicator
-            const indicator=document.createElement('button');
-            indicator.className='mobile-carousel-indicator';
-            if(index===0) indicator.classList.add('active');
-            indicator.addEventListener('click',()=>{ this.goToCarouselSlide(index); });
-            this.mobileCarouselIndicators.appendChild(indicator);
-            this.carouselIndicators.push(indicator);
+    <script>
+        class RadioCube {
+            constructor() {
+                this.cubeContainer = document.getElementById('cubeContainer');
+                this.scene = document.getElementById('scene');
+                this.numberNav = document.getElementById('numberNav');
+                this.mobileContainer = document.getElementById('mobileContainer');
+                this.mobilePlaylistBtns = document.querySelectorAll('.mobile-playlist-btn');
+                
+                // Carousel elements
+                this.mobileCarouselContainer = document.getElementById('mobileCarouselContainer');
+                this.mobileCarouselBackBtn = document.getElementById('mobileCarouselBackBtn');
+                this.mobileCarouselTitle = document.getElementById('mobileCarouselTitle');
+                this.mobileCarouselTrack = document.getElementById('mobileCarouselTrack');
+                this.mobileCarouselNav = document.getElementById('mobileCarouselNav');
+                
+                // Cube radio URLs (unchanged order)
+                this.cubeRadioUrls = [
+                    'https://embed.music.apple.com/de/playlist/radio-1/pl.u-55D6ZNlH65KbDqe?l=en',
+                    'https://embed.music.apple.com/de/playlist/radio-2/pl.u-pMylgxvSWJVDZ9j?l=en',
+                    'https://embed.music.apple.com/de/playlist/radio-3/pl.u-zPyLl9Rue01ypmo?l=en',
+                    'https://embed.music.apple.com/de/playlist/radio-4/pl.u-qxylEY6s3maARZy?l=en',
+                    'https://embed.music.apple.com/de/playlist/radio-5/pl.u-4JomaBmCJLE6Zg0?l=en',
+                    'https://embed.music.apple.com/de/playlist/radio-6/pl.u-55D6Zq7I65KbDqe?l=en'
+                ];
+                
+                // Carousel radio URLs - SWITCHED 2 and 4
+                this.carouselRadioUrls = [
+                    'https://embed.music.apple.com/de/playlist/radio-1/pl.u-55D6ZNlH65KbDqe?l=en',  // Radio 1
+                    'https://embed.music.apple.com/de/playlist/radio-4/pl.u-qxylEY6s3maARZy?l=en',  // Radio 4 (SWITCHED - replaces Radio 2)
+                    'https://embed.music.apple.com/de/playlist/radio-3/pl.u-zPyLl9Rue01ypmo?l=en',  // Radio 3
+                    'https://embed.music.apple.com/de/playlist/radio-2/pl.u-pMylgxvSWJVDZ9j?l=en',  // Radio 2 (SWITCHED - replaces Radio 4)
+                    'https://embed.music.apple.com/de/playlist/radio-5/pl.u-4JomaBmCJLE6Zg0?l=en',  // Radio 5
+                    'https://embed.music.apple.com/de/playlist/radio-6/pl.u-55D6Zq7I65KbDqe?l=en'   // Radio 6
+                ];
+                
+                // Radio names (unchanged for both cube and carousel)
+                this.radioNames = [
+                    'RADIO 1', 'RADIO 2', 'RADIO 3', 'RADIO 4', 'RADIO 5', 'RADIO 6'
+                ];
+                
+                // Current rotation for desktop
+                this.currentRotation = { x: 0, y: 0 };
+                this.currentFace = 0;
+                this.isAnimating = false;
+                this.hasInteracted = false;
+                this.autoRotate = false;
+                this.autoRotateInterval = null;
+                this.inactivityTimeout = null;
+                this.rotationDirection = 1;
+                
+                // Carousel state
+                this.currentCarouselIndex = 0;
+                this.isCarouselAnimating = false;
+                this.carouselAutoRotateTimeout = null;
+                this.carouselInactivityTimeout = null;
+                this.carouselSlides = [];
+                this.carouselNavBtns = [];
+                
+                // Face rotations for desktop (unchanged)
+                this.faceRotations = [
+                    { x: 0, y: 0 },      // 1: Front (Radio 1)
+                    { x: 0, y: -90 },    // 2: Left (Radio 2)
+                    { x: 0, y: 180 },    // 3: Back (Radio 3)
+                    { x: 0, y: 90 },     // 4: Right (Radio 4)
+                    { x: -90, y: 0 },    // 5: Top (Radio 5)
+                    { x: 90, y: 0 }      // 6: Bottom (Radio 6)
+                ];
+                
+                this.init();
+            }
+            
+            init() {
+                this.updateCubeTransform();
+                this.updatePlayerFlipStates();
+                this.setupEventListeners();
+                this.updateNumberButtons();
+                this.setupMobileEvents();
+                this.createCarousel();
+                
+                // Start auto-rotation after 15 seconds
+                setTimeout(() => {
+                    if (!this.hasInteracted) {
+                        this.rotationDirection = -1;
+                        this.startAutoRotation();
+                    }
+                }, 15000);
+            }
+            
+            createCarousel() {
+                // Clear existing slides and navigation
+                this.mobileCarouselTrack.innerHTML = '';
+                this.mobileCarouselNav.innerHTML = '';
+                
+                // Create slides for each radio using CAROUSEL URLs (with 2 and 4 switched)
+                for (let i = 0; i < this.carouselRadioUrls.length; i++) {
+                    // Create slide
+                    const slide = document.createElement('div');
+                    slide.className = 'mobile-carousel-slide';
+                    slide.dataset.index = i;
+                    
+                    // Create iframe
+                    const iframe = document.createElement('iframe');
+                    iframe.className = 'mobile-carousel-iframe';
+                    iframe.allow = 'autoplay *; encrypted-media *;';
+                    iframe.sandbox = 'allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation';
+                    iframe.src = this.carouselRadioUrls[i];
+                    
+                    slide.appendChild(iframe);
+                    this.mobileCarouselTrack.appendChild(slide);
+                    this.carouselSlides.push(slide);
+                    
+                    // Create navigation button (1-6)
+                    const navBtn = document.createElement('button');
+                    navBtn.className = 'mobile-carousel-nav-btn';
+                    if (i === 0) navBtn.classList.add('active');
+                    navBtn.dataset.index = i;
+                    navBtn.textContent = (i + 1).toString();
+                    navBtn.addEventListener('click', () => {
+                        this.goToCarouselSlide(i);
+                        this.resetCarouselInactivityTimer();
+                    });
+                    
+                    this.mobileCarouselNav.appendChild(navBtn);
+                    this.carouselNavBtns.push(navBtn);
+                }
+            }
+            
+            setupEventListeners() {
+                // Click on cube to stop auto-rotation
+                this.scene.addEventListener('click', (e) => {
+                    if (e.target === this.scene || e.target.classList.contains('cube-container')) {
+                        this.stopAutoRotation();
+                        this.hasInteracted = true;
+                        this.rotationDirection = 1;
+                    }
+                });
+                
+                // Keyboard navigation
+                document.addEventListener('keydown', (e) => {
+                    if (e.key >= '1' && e.key <= '6') {
+                        const faceIndex = parseInt(e.key) - 1;
+                        this.rotateToFace(faceIndex);
+                        this.rotationDirection = 1;
+                    }
+                });
+                
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    this.updatePlayerFlipStates();
+                });
+            }
+            
+            setupMobileEvents() {
+                // Mobile playlist button clicks
+                this.mobilePlaylistBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const index = parseInt(btn.dataset.index);
+                        this.openMobileCarousel(index);
+                    });
+                });
+                
+                // Mobile carousel back button
+                this.mobileCarouselBackBtn.addEventListener('click', () => {
+                    this.closeMobileCarousel();
+                });
+                
+                // Keyboard navigation for carousel
+                document.addEventListener('keydown', (e) => {
+                    if (this.mobileCarouselContainer.style.display === 'block') {
+                        if (e.key === 'ArrowLeft') {
+                            this.prevCarouselSlide();
+                            this.resetCarouselInactivityTimer();
+                        } else if (e.key === 'ArrowRight') {
+                            this.nextCarouselSlide();
+                            this.resetCarouselInactivityTimer();
+                        } else if (e.key === 'Escape') {
+                            this.closeMobileCarousel();
+                        } else if (e.key >= '1' && e.key <= '6') {
+                            const slideIndex = parseInt(e.key) - 1;
+                            this.goToCarouselSlide(slideIndex);
+                            this.resetCarouselInactivityTimer();
+                        }
+                    }
+                });
+            }
+            
+            openMobileCarousel(startIndex) {
+                // Update active button in list
+                this.mobilePlaylistBtns.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (parseInt(btn.dataset.index) === startIndex) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // Go to the correct slide
+                this.goToCarouselSlide(startIndex);
+                
+                // Show carousel, hide list
+                this.mobileContainer.style.display = 'none';
+                this.mobileCarouselContainer.style.display = 'block';
+                
+                // Stop any cube rotation
+                this.stopAutoRotation();
+                
+                // Start carousel inactivity timer
+                this.resetCarouselInactivityTimer();
+            }
+            
+            goToCarouselSlide(index) {
+                if (this.isCarouselAnimating || index < 0 || index >= this.carouselSlides.length) return;
+                
+                this.isCarouselAnimating = true;
+                this.currentCarouselIndex = index;
+                
+                // Update carousel position
+                const slideWidth = 100; // percentage
+                const translateX = -index * slideWidth;
+                this.mobileCarouselTrack.style.transform = `translateX(${translateX}%)`;
+                
+                // Update title (use original radio names, not switched)
+                this.mobileCarouselTitle.textContent = this.radioNames[index];
+                
+                // Update navigation buttons
+                this.carouselNavBtns.forEach((btn, i) => {
+                    btn.classList.remove('active');
+                    if (i === index) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // Reset animation flag
+                setTimeout(() => {
+                    this.isCarouselAnimating = false;
+                }, 600);
+            }
+            
+            nextCarouselSlide() {
+                const nextIndex = (this.currentCarouselIndex + 1) % this.carouselSlides.length;
+                this.goToCarouselSlide(nextIndex);
+            }
+            
+            prevCarouselSlide() {
+                const prevIndex = (this.currentCarouselIndex - 1 + this.carouselSlides.length) % this.carouselSlides.length;
+                this.goToCarouselSlide(prevIndex);
+            }
+            
+            resetCarouselInactivityTimer() {
+                // Clear existing timeout
+                if (this.carouselInactivityTimeout) {
+                    clearTimeout(this.carouselInactivityTimeout);
+                }
+                
+                if (this.carouselAutoRotateTimeout) {
+                    clearTimeout(this.carouselAutoRotateTimeout);
+                }
+                
+                // Set new timeout for 15 seconds
+                this.carouselInactivityTimeout = setTimeout(() => {
+                    this.startCarouselAutoRotation();
+                }, 15000); // 15 seconds
+            }
+            
+            startCarouselAutoRotation() {
+                // Stop if already rotating
+                if (this.carouselAutoRotateTimeout) return;
+                
+                const rotate = () => {
+                    if (this.mobileCarouselContainer.style.display !== 'block') {
+                        // Carousel is not visible, stop auto-rotation
+                        this.carouselAutoRotateTimeout = null;
+                        return;
+                    }
+                    
+                    // Move to next slide
+                    this.nextCarouselSlide();
+                    
+                    // Schedule next rotation (every 5 seconds)
+                    this.carouselAutoRotateTimeout = setTimeout(rotate, 5000);
+                };
+                
+                // Start rotation
+                rotate();
+            }
+            
+            closeMobileCarousel() {
+                // Hide carousel, show list
+                this.mobileCarouselContainer.style.display = 'none';
+                this.mobileContainer.style.display = 'block';
+                
+                // Stop carousel auto-rotation
+                if (this.carouselAutoRotateTimeout) {
+                    clearTimeout(this.carouselAutoRotateTimeout);
+                    this.carouselAutoRotateTimeout = null;
+                }
+                
+                if (this.carouselInactivityTimeout) {
+                    clearTimeout(this.carouselInactivityTimeout);
+                    this.carouselInactivityTimeout = null;
+                }
+            }
+            
+            rotateToFace(targetFace) {
+                if (this.isAnimating || targetFace === this.currentFace) return;
+                
+                this.stopAutoRotation();
+                this.isAnimating = true;
+                this.hasInteracted = true;
+                this.rotationDirection = 1;
+                
+                if (this.inactivityTimeout) {
+                    clearTimeout(this.inactivityTimeout);
+                }
+                
+                const startRotation = this.currentRotation;
+                const targetRotation = this.faceRotations[targetFace];
+                
+                let deltaY = targetRotation.y - startRotation.y;
+                if (deltaY > 180) deltaY -= 360;
+                if (deltaY < -180) deltaY += 360;
+                
+                let deltaX = targetRotation.x - startRotation.x;
+                if (deltaX > 180) deltaX -= 360;
+                if (deltaX < -180) deltaX += 360;
+                
+                this.currentRotation.x = startRotation.x + deltaX;
+                this.currentRotation.y = startRotation.y + deltaY;
+                this.currentFace = targetFace;
+                
+                this.cubeContainer.style.transition = 'transform 0.6s ease';
+                this.updateCubeTransform();
+                this.updateNumberButtons();
+                this.updatePlayerFlipStates();
+                
+                setTimeout(() => {
+                    this.isAnimating = false;
+                    this.resetInactivityTimer();
+                }, 600);
+            }
+            
+            updateCubeTransform() {
+                const x = this.currentRotation.x;
+                const y = this.currentRotation.y;
+                
+                this.cubeContainer.style.transform = `
+                    rotateX(${x}deg) 
+                    rotateY(${y}deg)
+                `;
+            }
+            
+            updatePlayerFlipStates() {
+                const playerContainers = document.querySelectorAll('.player-container');
+                
+                playerContainers.forEach((container, index) => {
+                    const faceNormal = this.getFaceNormal(index);
+                    
+                    if (faceNormal.y < -0.1) {
+                        container.classList.add('flipped');
+                    } else {
+                        container.classList.remove('flipped');
+                    }
+                });
+            }
+            
+            getFaceNormal(faceIndex) {
+                const faceNormals = [
+                    { x: 0, y: 0, z: 1 },
+                    { x: -1, y: 0, z: 0 },
+                    { x: 0, y: 0, z: -1 },
+                    { x: 1, y: 0, z: 0 },
+                    { x: 0, y: 1, z: 0 },
+                    { x: 0, y: -1, z: 0 },
+                ];
+                
+                const normal = faceNormals[faceIndex];
+                
+                const radX = this.currentRotation.x * Math.PI / 180;
+                const radY = this.currentRotation.y * Math.PI / 180;
+                
+                const cosY = Math.cos(radY);
+                const sinY = Math.sin(radY);
+                let x1 = normal.x * cosY - normal.z * sinY;
+                let y1 = normal.y;
+                let z1 = normal.x * sinY + normal.z * cosY;
+                
+                const cosX = Math.cos(radX);
+                const sinX = Math.sin(radX);
+                const y2 = y1 * cosX - z1 * sinX;
+                
+                return {
+                    x: x1,
+                    y: y2
+                };
+            }
+            
+            updateNumberButtons() {
+                const buttons = this.numberNav.querySelectorAll('.number-btn');
+                buttons.forEach((btn, index) => {
+                    if (index === this.currentFace) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            }
+            
+            startAutoRotation() {
+                if (this.hasInteracted) return;
+                
+                this.autoRotate = true;
+                
+                if (this.currentFace === 4 || this.currentFace === 5) {
+                    this.smoothRotateToFace(0, () => {
+                        this.startContinuousRotation();
+                    });
+                } else {
+                    this.startContinuousRotation();
+                }
+            }
+            
+            smoothRotateToFace(targetFace, onComplete) {
+                if (this.isAnimating || targetFace === this.currentFace) {
+                    if (onComplete) onComplete();
+                    return;
+                }
+                
+                this.isAnimating = true;
+                
+                const startRotation = this.currentRotation;
+                const targetRotation = this.faceRotations[targetFace];
+                
+                let deltaY = targetRotation.y - startRotation.y;
+                if (deltaY > 180) deltaY -= 360;
+                if (deltaY < -180) deltaY += 360;
+                
+                let deltaX = targetRotation.x - startRotation.x;
+                if (deltaX > 180) deltaX -= 360;
+                if (deltaX < -180) deltaX += 360;
+                
+                this.currentRotation.x = startRotation.x + deltaX;
+                this.currentRotation.y = startRotation.y + deltaY;
+                this.currentFace = targetFace;
+                
+                this.cubeContainer.style.transition = 'transform 1.5s ease';
+                this.updateCubeTransform();
+                this.updateNumberButtons();
+                this.updatePlayerFlipStates();
+                
+                setTimeout(() => {
+                    this.isAnimating = false;
+                    if (onComplete) onComplete();
+                }, 1500);
+            }
+            
+            startContinuousRotation() {
+                let rotationAngle = this.currentRotation.y;
+                
+                const rotate = () => {
+                    if (!this.autoRotate || this.hasInteracted) return;
+                    
+                    rotationAngle += 0.1 * this.rotationDirection;
+                    
+                    this.currentRotation.y = rotationAngle;
+                    this.cubeContainer.style.transition = 'transform 0.1s linear';
+                    this.updateCubeTransform();
+                    
+                    const normalizedAngle = ((rotationAngle % 360) + 360) % 360;
+                    let newFace = this.currentFace;
+                    
+                    if (this.rotationDirection === 1) {
+                        if (normalizedAngle >= 315 || normalizedAngle < 45) newFace = 0;
+                        else if (normalizedAngle >= 45 && normalizedAngle < 135) newFace = 3;
+                        else if (normalizedAngle >= 135 && normalizedAngle < 225) newFace = 2;
+                        else if (normalizedAngle >= 225 && normalizedAngle < 315) newFace = 1;
+                    } else {
+                        if (normalizedAngle >= 315 || normalizedAngle < 45) newFace = 0;
+                        else if (normalizedAngle >= 45 && normalizedAngle < 135) newFace = 1;
+                        else if (normalizedAngle >= 135 && normalizedAngle < 225) newFace = 2;
+                        else if (normalizedAngle >= 225 && normalizedAngle < 315) newFace = 3;
+                    }
+                    
+                    if (newFace !== this.currentFace) {
+                        this.currentFace = newFace;
+                        this.updateNumberButtons();
+                        this.updatePlayerFlipStates();
+                    }
+                    
+                    this.autoRotateInterval = requestAnimationFrame(rotate);
+                };
+                
+                rotate();
+            }
+            
+            stopAutoRotation() {
+                this.autoRotate = false;
+                
+                if (this.autoRotateInterval) {
+                    cancelAnimationFrame(this.autoRotateInterval);
+                    this.autoRotateInterval = null;
+                }
+            }
+            
+            resetInactivityTimer() {
+                if (this.inactivityTimeout) {
+                    clearTimeout(this.inactivityTimeout);
+                }
+                
+                this.inactivityTimeout = setTimeout(() => {
+                    if (this.hasInteracted && !this.isAnimating) {
+                        this.hasInteracted = false;
+                        this.rotationDirection = -1;
+                        this.startAutoRotation();
+                    }
+                }, 15000);
+            }
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            window.radioCube = new RadioCube();
         });
-    }
-
-    setupMobileEvents() {
-        this.mobilePlaylistBtns.forEach(btn=>{
-            btn.addEventListener('click',()=>{
-                const index=parseInt(btn.dataset.index);
-                this.openMobileCarousel(index);
-            });
+        
+        // Handle page visibility
+        document.addEventListener('visibilitychange', () => {
+            if (window.radioCube && document.hidden) {
+                window.radioCube.stopAutoRotation();
+            } else if (window.radioCube && !document.hidden && !window.radioCube.hasInteracted) {
+                setTimeout(() => {
+                    window.radioCube.rotationDirection = -1;
+                    window.radioCube.startAutoRotation();
+                }, 1000);
+            }
         });
-
-        this.mobileCarouselBackBtn.addEventListener('click',()=>{ this.closeMobileCarousel(); });
-    }
-
-    openMobileCarousel(index){
-        this.mobilePlaylistBtns.forEach(btn=>btn.classList.remove('active'));
-        this.mobilePlaylistBtns[index].classList.add('active');
-
-        this.goToCarouselSlide(index);
-
-        this.mobileContainer.style.display='none';
-        this.mobileCarouselContainer.style.display='block';
-    }
-
-    closeMobileCarousel(){
-        this.mobileCarouselContainer.style.display='none';
-        this.mobileContainer.style.display='block';
-    }
-
-    goToCarouselSlide(index){
-        if(this.isCarouselAnimating || index<0 || index>=this.carouselSlides.length) return;
-        this.isCarouselAnimating=true;
-        this.currentCarouselIndex=index;
-        const translateX=-index*100;
-        this.mobileCarouselTrack.style.transform=`translateX(${translateX}%)`;
-
-        this.carouselIndicators.forEach((ind,i)=>i===index?ind.classList.add('active'):ind.classList.remove('active'));
-        this.mobileCarouselTitle.textContent=this.radioNames[index];
-
-        setTimeout(()=>{ this.isCarouselAnimating=false; },600);
-    }
-
-    nextCarouselSlide(){ this.goToCarouselSlide(this.currentCarouselIndex+1); }
-    prevCarouselSlide(){ this.goToCarouselSlide(this.currentCarouselIndex-1); }
-
-    // cube rotation for desktop (optional)
-    rotateToFace(faceIndex){
-        const angleY=[0, -90, -180, 90, 0, 0];
-        const angleX=[0, 0, 0, 0, -90, 90];
-        this.cubeContainer.style.transform=`rotateX(${angleX[faceIndex]}deg) rotateY(${angleY[faceIndex]}deg)`;
-        // update nav buttons
-        document.querySelectorAll('.number-btn').forEach((btn,i)=>i===faceIndex?btn.classList.add('active'):btn.classList.remove('active'));
-    }
-}
-
-const radioCube=new RadioCube();
-</script>
+    </script>
 </body>
 </html>
