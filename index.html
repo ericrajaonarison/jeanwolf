@@ -216,6 +216,7 @@
             justify-content: space-between;
             position: relative;
             z-index: 10;
+            flex-shrink: 0;
         }
 
         .mobile-carousel-title {
@@ -240,7 +241,7 @@
         .mobile-carousel {
             position: relative;
             width: 100%;
-            height: calc(100% - 120px);
+            height: calc(100% - 180px); /* Adjusted for header and nav */
             overflow: hidden;
         }
 
@@ -271,19 +272,21 @@
             border-radius: 10px;
         }
 
-        /* Mobile Carousel Number Navigation (Replaces swipe) */
+        /* Mobile Carousel Number Navigation - FIXED POSITION */
         .mobile-carousel-nav {
             position: absolute;
-            bottom: 20px;
+            bottom: 0;
             left: 0;
             right: 0;
             display: flex;
             justify-content: center;
+            align-items: center;
             gap: 15px;
             z-index: 10;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
+            padding: 20px;
+            background: #000;
+            height: 100px;
+            flex-shrink: 0;
         }
 
         .mobile-carousel-nav-btn {
@@ -360,7 +363,12 @@
                 }
                 
                 .mobile-carousel {
-                    height: calc(100% - 110px);
+                    height: calc(100% - 160px);
+                }
+                
+                .mobile-carousel-nav {
+                    height: 80px;
+                    padding: 15px;
                 }
             }
             
@@ -388,12 +396,13 @@
                 }
                 
                 .mobile-carousel {
-                    height: calc(100% - 100px);
+                    height: calc(100% - 140px);
                 }
                 
                 .mobile-carousel-nav {
-                    gap: 10px;
-                    padding: 8px;
+                    height: 70px;
+                    padding: 12px;
+                    gap: 12px;
                 }
                 
                 .mobile-carousel-nav-btn {
@@ -412,17 +421,26 @@
                 }
                 
                 .mobile-carousel {
-                    height: calc(100% - 90px);
+                    height: calc(100% - 120px);
                 }
                 
                 .mobile-carousel-nav {
-                    bottom: 10px;
-                    gap: 8px;
+                    height: 60px;
+                    padding: 10px;
+                    gap: 10px;
                 }
                 
                 .mobile-carousel-nav-btn {
                     font-size: 14px;
                     min-width: 25px;
+                }
+                
+                .mobile-carousel-header {
+                    padding: 10px;
+                }
+                
+                .mobile-carousel-title {
+                    font-size: 20px;
                 }
             }
         }
@@ -550,11 +568,11 @@
             <div class="mobile-carousel-track" id="mobileCarouselTrack">
                 <!-- Slides will be dynamically created here -->
             </div>
-            
-            <!-- Mobile Carousel Number Navigation -->
-            <div class="mobile-carousel-nav" id="mobileCarouselNav">
-                <!-- Number buttons will be dynamically created here -->
-            </div>
+        </div>
+        
+        <!-- Mobile Carousel Number Navigation - MOVED OUTSIDE CAROUSEL -->
+        <div class="mobile-carousel-nav" id="mobileCarouselNav">
+            <!-- Number buttons will be dynamically created here -->
         </div>
     </div>
 
